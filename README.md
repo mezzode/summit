@@ -1,3 +1,10 @@
+# Article Header Generator
+
+Wanted an easy way to generate these type of headers and thought it would be a
+good way to get familiar with the Canvas API and React Refs.
+
+---
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
