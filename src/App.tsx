@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, ChangeEventHandler } from 'react';
 import './App.css';
 
 interface Props {}
@@ -7,12 +7,14 @@ interface State {
   imgs: {
     name: string;
     img: HTMLImageElement;
-  }[]
+  }[],
+  url: string|null;
 }
 
 class App extends Component<Props, State> {
   public state: State = {
-    imgs: []
+    imgs: [],
+    url: '',
   }
 
   private mainCanvas = React.createRef<HTMLCanvasElement>();
@@ -70,7 +72,7 @@ class App extends Component<Props, State> {
     ));
   }
 
-  add = () => {
+  addLocal = () => {
     const fileInput = this.fileInput.current;
     if (!fileInput) {
       return;
@@ -86,8 +88,6 @@ class App extends Component<Props, State> {
       const url = window.URL.createObjectURL(f);
       const img = new Image();
       img.src = url;
-      // may need to set img.crossorigin attr for non-local urls
-      // see https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Using_images#Using_images_from_other_domains
 
       img.addEventListener('load', () => {
         console.log('loaded');
@@ -98,40 +98,66 @@ class App extends Component<Props, State> {
         }
       });
 
-      // maybe could use observables to make this a bit cleaner instead of counting
-      // may be overkill tho
-
       return {
         img,
         name: f.name,
       };
     })
 
-    this.setState({ imgs });
+    this.setState({ 
+      imgs: [...this.state.imgs, ...imgs],
+    });
 
     // clear input
     fileInput.value = '';
   }
 
+  addRemote = () => {
+    const { imgs, url } = this.state;
+    if (url === null) {
+      throw new Error();
+    }
+
+    const img = new Image();
+    img.src = url;
+    img.crossOrigin = 'anonymous';
+
+    img.addEventListener('load', () => {
+      const [name] = url.split('/').slice(-1);
+      this.setState({
+        imgs: [...imgs, {
+          img,
+          name,
+        }],
+        url: '',
+      })
+      this.drawMiniPositions();
+    });
+  }
+
+  clear = () => {
+    this.setState({ imgs: [] });
+  }
+
+  changeUrl: ChangeEventHandler<HTMLInputElement> = e => {
+    this.setState({ url: e.target.value });
+  }
+
   render() {
+    const { url } = this.state;
     return (
       <div className="main container">
         <h1>Article Header Generator</h1>
         {this.state.imgs.length > 0 && <canvas ref={this.mainCanvas} className="main-canvas"/>}
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
-        <input id="fileInput" type="file" accept="image/*" multiple ref={this.fileInput} hidden onChange={this.add}/>
-        <label htmlFor="fileInput" className="button">Select Images</label>
+        <input id="fileInput" type="file" accept="image/*" multiple ref={this.fileInput} hidden onChange={this.addLocal}/>
+        <label htmlFor="fileInput" className="button">Add local images</label>
+        <button className="button button-outline" onClick={this.addRemote}>Add from URL</button>
+        <button className="button button-clear" onClick={this.clear}>Clear</button>
+        {url !== null && <input type="text" onChange={this.changeUrl} value={url} />}
       </div>
     );
   }
 }
-
-// either allow inputting image urls or allow selection of local images (or both).
-
-// pwa should just be cache everything in folder since no server-side stuff.
-
-// TODO:
-// add a save button
-// make canvas background transparent
 
 export default App;
