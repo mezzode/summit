@@ -82,6 +82,7 @@ class App extends Component<Props, State> {
       return;
     }
 
+    const toLoad = files.length;
     let loaded = 0;
     const imgs = Array.from(files).map(f => {
       const url = window.URL.createObjectURL(f);
@@ -93,7 +94,7 @@ class App extends Component<Props, State> {
       img.addEventListener('load', () => {
         console.log('loaded');
         loaded += 1;
-        if (loaded === files.length) {
+        if (loaded === toLoad) {
           console.log('all loaded');
           this.drawMiniPositions();
         }
@@ -111,6 +112,9 @@ class App extends Component<Props, State> {
     this.setState({
       imgs: [...this.state.imgs, ...imgs],
     })
+
+    // clear input
+    fileInput.value = '';
   }
 
   render() {
