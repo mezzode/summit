@@ -15,7 +15,7 @@ class App extends Component<Props, State> {
     imgs: []
   }
 
-  private mainCanvas = React.createRef<HTMLCanvasElement>();
+  private previewCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
   private static readonly spacing = 40;
 
@@ -34,44 +34,39 @@ class App extends Component<Props, State> {
       positions.push({ img, x, y, });
       x += img.width + App.spacing;
     }
-    return positions
+    return {
+      positions,
+      fullWidth: x,
+    }
   }
 
   private drawMiniPositions(): void {
-    const positions = this.calcFullPositions();
+    const {positions, fullWidth} = this.calcFullPositions();
     if (!positions) {
       return;
     }
 
-    const [{img: {width: lastWidth}, x: lastX}] = positions.slice(-1);
-    const fullWidth = lastX + lastWidth + App.spacing;
-
-    const mainCanvas = this.mainCanvas.current;
-    if (!mainCanvas) {
-      throw new Error('mainCanvas missing');
+    const previewCanvas = this.previewCanvas.current;
+    if (!previewCanvas) {
+      throw new Error('previewCanvas missing');
     }
 
-    const scaleFactor = mainCanvas.width / fullWidth;
-    const miniPositions = positions.map(({ img, x, y }) => ({
-      img,
-      x: x * scaleFactor,
-      y: y * scaleFactor,
-    }));
+    const scaleFactor = previewCanvas.width / fullWidth;
 
     // change canvas height
-    const maxHeight = Math.max(...miniPositions.map(({img}) => img.height));
-    mainCanvas.height = maxHeight * scaleFactor;
+    const maxHeight = Math.max(...positions.map(({img}) => img.height));
+    previewCanvas.height = maxHeight * scaleFactor;
     // TODO: adjust scaling so preview always fits in window
 
-    const ctx = mainCanvas.getContext('2d');
+    const ctx = previewCanvas.getContext('2d');
     if (!ctx) {
       throw new Error('ctx missing');
     }
 
-    miniPositions.forEach(({img, x, y}) => ctx.drawImage(
+    positions.forEach(({img, x, y}) => ctx.drawImage(
       img,
-      x,
-      y,
+      x * scaleFactor,
+      y * scaleFactor,
       img.width * scaleFactor,
       img.height * scaleFactor
     ));
@@ -125,7 +120,7 @@ class App extends Component<Props, State> {
           Article Header Generator
         </header>
         <h1>Preview</h1>
-        <canvas ref={this.mainCanvas} width={1000}/>
+        <canvas ref={this.previewCanvas} width={1000}/>
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
         <input type="file" accept="image/*" multiple ref={this.fileInput}/>
         <button onClick={this.add}>Add</button>
