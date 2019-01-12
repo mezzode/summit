@@ -17,28 +17,14 @@ class App extends Component<Props, State> {
 
   private mainCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
+  private static readonly spacing = 40;
 
-  show() {
-    if (!this.state.imgs) {
-      return;
-    }
-
-    const mainCanvas = this.mainCanvas.current;
-    if (!mainCanvas) {
-      return;
-    }
-
-    const ctx = mainCanvas.getContext('2d');
-    if (!ctx) {
-      return;
-    }
-
+  private calcFullPositions() {
     const imgs = this.state.imgs.map(img => img.img);
 
     const maxHeight = Math.max(...imgs.map(({height}) => height));
 
-    const spacing = 40;
-    let x = spacing;
+    let x = App.spacing;
 
     // calc positions (for drawing later since resizing the canvas clears it)
     const positions = [];
@@ -46,15 +32,49 @@ class App extends Component<Props, State> {
       // TODO: put plus signs in between imgs
       const y = (maxHeight - img.height) / 2;
       positions.push({ img, x, y, });
-      x += img.width + spacing;
+      x += img.width + App.spacing;
+    }
+    return positions
+  }
+
+  private drawMiniPositions(): void {
+    const positions = this.calcFullPositions();
+    if (!positions) {
+      return;
     }
 
-    // resize canvas
-    mainCanvas.height = maxHeight;
-    mainCanvas.width = x;
+    const [{img: {width: lastWidth}, x: lastX}] = positions.slice(-1);
+    const fullWidth = lastX + lastWidth + App.spacing;
 
-    // draw
-    positions.forEach(({img, x, y}) => ctx.drawImage(img, x, y));
+    const mainCanvas = this.mainCanvas.current;
+    if (!mainCanvas) {
+      throw new Error('mainCanvas missing');
+    }
+
+    const scaleFactor = mainCanvas.width / fullWidth;
+    const miniPositions = positions.map(({ img, x, y }) => ({
+      img,
+      x: x * scaleFactor,
+      y: y * scaleFactor,
+    }));
+
+    // change canvas height
+    const maxHeight = Math.max(...miniPositions.map(({img}) => img.height));
+    mainCanvas.height = maxHeight * scaleFactor;
+    // TODO: adjust scaling so preview always fits in window
+
+    const ctx = mainCanvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('ctx missing');
+    }
+
+    miniPositions.forEach(({img, x, y}) => ctx.drawImage(
+      img,
+      x,
+      y,
+      img.width * scaleFactor,
+      img.height * scaleFactor
+    ));
   }
 
   add = () => {
@@ -80,7 +100,7 @@ class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === files.length) {
           console.log('all loaded');
-          this.show();
+          this.drawMiniPositions();
         }
       });
 
@@ -104,7 +124,8 @@ class App extends Component<Props, State> {
         <header className="App-header">
           Article Header Generator
         </header>
-        <canvas ref={this.mainCanvas} />
+        <h1>Preview</h1>
+        <canvas ref={this.mainCanvas} width={1000}/>
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
         <input type="file" accept="image/*" multiple ref={this.fileInput}/>
         <button onClick={this.add}>Add</button>
