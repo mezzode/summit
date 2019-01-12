@@ -12,3 +12,9 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+
+.main-canvas {
+  object-fit: scale-down;
+  height: 100%;
+  width: 100%;
+}

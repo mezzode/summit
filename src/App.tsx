@@ -15,7 +15,7 @@ class App extends Component<Props, State> {
     imgs: []
   }
 
-  private previewCanvas = React.createRef<HTMLCanvasElement>();
+  private mainCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
   private static readonly spacing = 40;
 
@@ -46,29 +46,27 @@ class App extends Component<Props, State> {
       return;
     }
 
-    const previewCanvas = this.previewCanvas.current;
-    if (!previewCanvas) {
-      throw new Error('previewCanvas missing');
+    const mainCanvas = this.mainCanvas.current;
+    if (!mainCanvas) {
+      throw new Error('mainCanvas missing');
     }
 
-    const scaleFactor = previewCanvas.width / fullWidth;
-
-    // change canvas height
+    // change canvas dims
     const maxHeight = Math.max(...positions.map(({img}) => img.height));
-    previewCanvas.height = maxHeight * scaleFactor;
-    // TODO: adjust scaling so preview always fits in window
+    mainCanvas.height = maxHeight;
+    mainCanvas.width = fullWidth;
 
-    const ctx = previewCanvas.getContext('2d');
+    const ctx = mainCanvas.getContext('2d');
     if (!ctx) {
       throw new Error('ctx missing');
     }
 
     positions.forEach(({img, x, y}) => ctx.drawImage(
       img,
-      x * scaleFactor,
-      y * scaleFactor,
-      img.width * scaleFactor,
-      img.height * scaleFactor
+      x,
+      y,
+      img.width,
+      img.height
     ));
   }
 
@@ -124,7 +122,7 @@ class App extends Component<Props, State> {
           Article Header Generator
         </header>
         <h1>Preview</h1>
-        <canvas ref={this.previewCanvas} width={1000}/>
+        <canvas ref={this.mainCanvas} className="main-canvas"/>
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
         <input type="file" accept="image/*" multiple ref={this.fileInput}/>
         <button onClick={this.add}>Add</button>
@@ -139,12 +137,6 @@ class App extends Component<Props, State> {
 
 // TODO:
 // add a save button
-// add the calculation, etc. functionality
 // make canvas background transparent
-
-// will need a hidden canvas that is max size, and have the display canvas
-// be displaying a scaled down version of the full image from the hidden canvas
-// or could just store positions and render the scaled down version
-// and only on export render to a full canvas
 
 export default App;
