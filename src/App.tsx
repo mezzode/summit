@@ -19,6 +19,10 @@ class App extends Component<Props, State> {
   private fileInput = React.createRef<HTMLInputElement>();
 
   show() {
+    if (!this.state.imgs) {
+      return;
+    }
+
     const mainCanvas = this.mainCanvas.current;
     if (!mainCanvas) {
       return;
@@ -29,15 +33,28 @@ class App extends Component<Props, State> {
       return;
     }
 
-    this.state.imgs.forEach(img => {
-      // TODO: calculate appropriate width and height
-      // need to box images equally then space them equally
-      // and put plus signs between. generate plus signs with canvas?
-      // does canvas have a auto space distributor like flexbox?
-      const w = 500;
-      const h = 500;
-      ctx.drawImage(img.img, 0, 0, w, h);
-    })
+    const imgs = this.state.imgs.map(img => img.img);
+
+    const maxHeight = Math.max(...imgs.map(({height}) => height));
+
+    const spacing = 40;
+    let x = spacing;
+
+    // calc positions (for drawing later since resizing the canvas clears it)
+    const positions = [];
+    for (const img of imgs) {
+      // TODO: put plus signs in between imgs
+      const y = (maxHeight - img.height) / 2;
+      positions.push({ img, x, y, });
+      x += img.width + spacing;
+    }
+
+    // resize canvas
+    mainCanvas.height = maxHeight;
+    mainCanvas.width = x;
+
+    // draw
+    positions.forEach(({img, x, y}) => ctx.drawImage(img, x, y));
   }
 
   add = () => {
@@ -104,5 +121,10 @@ class App extends Component<Props, State> {
 // add a save button
 // add the calculation, etc. functionality
 // make canvas background transparent
+
+// will need a hidden canvas that is max size, and have the display canvas
+// be displaying a scaled down version of the full image from the hidden canvas
+// or could just store positions and render the scaled down version
+// and only on export render to a full canvas
 
 export default App;
