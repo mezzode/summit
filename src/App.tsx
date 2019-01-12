@@ -42,7 +42,7 @@ class App extends Component<Props, State> {
 
   private drawMiniPositions(): void {
     const {positions, fullWidth} = this.calcFullPositions();
-    if (!positions) {
+    if (positions.length === 0) {
       return;
     }
 
@@ -107,9 +107,7 @@ class App extends Component<Props, State> {
       };
     })
 
-    this.setState({
-      imgs: [...this.state.imgs, ...imgs],
-    })
+    this.setState({ imgs });
 
     // clear input
     fileInput.value = '';
@@ -117,15 +115,12 @@ class App extends Component<Props, State> {
 
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          Article Header Generator
-        </header>
-        <h1>Preview</h1>
-        <canvas ref={this.mainCanvas} className="main-canvas"/>
+      <div className="main container">
+        <h1>Article Header Generator</h1>
+        {this.state.imgs.length > 0 && <canvas ref={this.mainCanvas} className="main-canvas"/>}
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
-        <input type="file" accept="image/*" multiple ref={this.fileInput}/>
-        <button onClick={this.add}>Add</button>
+        <input id="fileInput" type="file" accept="image/*" multiple ref={this.fileInput} hidden onChange={this.add}/>
+        <label htmlFor="fileInput" className="button">Select Images</label>
       </div>
     );
   }
