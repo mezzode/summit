@@ -13,7 +13,6 @@ interface State {
   remoteUrl: string|null;
   spacingInput: string;
   canvasUrl: string|null;
-  format: string;
 }
 
 class App extends Component<Props, State> {
@@ -22,7 +21,6 @@ class App extends Component<Props, State> {
     remoteUrl: '',
     spacingInput: '40',
     canvasUrl: null,
-    format: 'png',
   }
 
   private mainCanvas = React.createRef<HTMLCanvasElement>();
@@ -80,12 +78,13 @@ class App extends Component<Props, State> {
       img.height
     ));
 
-    const mimeType = `image/${this.state.format}`;
-    // image/jpeg, image/webp
+    this.updateCanvasUrl(mainCanvas);
+  }
 
+  updateCanvasUrl(mainCanvas: HTMLCanvasElement) {
     if (!mainCanvas.toBlob) {
-      // toBlob not supported, fallback to data url
-      this.setState({ canvasUrl: mainCanvas.toDataURL(mimeType) });
+      // toBlob not supported, fall back to data url
+      this.setState({ canvasUrl: mainCanvas.toDataURL() });
       return;
     }
 
@@ -94,7 +93,7 @@ class App extends Component<Props, State> {
         throw new Error();
       }
       this.setState({ canvasUrl: URL.createObjectURL(blob) });
-    }, mimeType);
+    });
   }
 
   addLocal = () => {
@@ -189,7 +188,7 @@ class App extends Component<Props, State> {
   }
 
   render() {
-    const { remoteUrl, spacingInput, canvasUrl, format } = this.state;
+    const { remoteUrl, spacingInput, canvasUrl } = this.state;
     return (
       <div className="main container">
         <h1>Article Header Generator</h1>
@@ -202,7 +201,7 @@ class App extends Component<Props, State> {
         {remoteUrl !== null && <input type="text" onChange={this.changeUrl} value={remoteUrl} />}
         <input type="number" onChange={this.changeSpacing} value={spacingInput}  />
         {canvasUrl ?
-          <a className="button" href={canvasUrl} download={`header.${format}`}>Save</a> :
+          <a className="button" href={canvasUrl} download="header.png">Save</a> :
           <a className="button disabled-link-btn">Save</a>
         }
       </div>
