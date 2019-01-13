@@ -1,4 +1,5 @@
-import React, { Component, ChangeEventHandler, EventHandler, MouseEventHandler } from 'react';
+import React, { Component, ChangeEventHandler, MouseEventHandler } from 'react';
+import {DragDropContext, Droppable, Draggable, OnDragEndResponder} from 'react-beautiful-dnd';
 import 'milligram';
 import 'normalize.css';
 import './App.css';
@@ -45,10 +46,10 @@ class App extends Component<Props, State> {
     }
   }
 
-  private drawMiniPositions(spacing: number): void {
+  private drawMiniPositions(imgs: HTMLImageElement[], spacing: number): void {
     this.clearCanvasUrl();
     const {positions, fullWidth} = this.calcFullPositions(
-      this.state.imgs.map(img => img.img),
+      imgs,
       spacing,
     );
     if (positions.length === 0) {
@@ -118,7 +119,10 @@ class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           console.log('all loaded');
-          this.drawMiniPositions(parseInt(this.state.spacingInput) || 0);
+          this.drawMiniPositions(
+            this.state.imgs.map(img => img.img),
+            parseInt(this.state.spacingInput) || 0
+          );
         }
       });
 
@@ -155,7 +159,10 @@ class App extends Component<Props, State> {
         }],
         remoteUrl: '',
       })
-      this.drawMiniPositions(parseInt(this.state.spacingInput) || 0);
+      this.drawMiniPositions(
+        this.state.imgs.map(img => img.img),
+        parseInt(this.state.spacingInput) || 0
+      );
     });
   }
 
@@ -184,7 +191,39 @@ class App extends Component<Props, State> {
     const spacingInput = e.target.value;
     this.setState({ spacingInput });
     // we need to pass spacing directly here since may draw before state has been updated
-    this.drawMiniPositions(parseInt(spacingInput) || 0);
+    this.drawMiniPositions(
+      this.state.imgs.map(img => img.img),
+      parseInt(spacingInput) || 0
+    );
+  }
+
+  reorder<T>(arr: T[], srcIndex: number, destIndex: number): T[] {
+    const arrCopy = [...arr];
+    const [moved] = arrCopy.splice(srcIndex, 1);
+    arrCopy.splice(destIndex, 0, moved);
+    return arrCopy;
+  }
+
+  onDragEnd: OnDragEndResponder = ({destination, source}) => {
+    if (!destination) {
+      // dropped outside list
+      return;
+    }
+
+    const imgs = this.reorder(
+      this.state.imgs,
+      destination.index,
+      source.index,
+    );
+
+    this.setState({
+      imgs,
+    });
+
+    this.drawMiniPositions(
+      imgs.map(img => img.img),
+      parseInt(this.state.spacingInput) || 0
+    );
   }
 
   render() {
@@ -193,7 +232,33 @@ class App extends Component<Props, State> {
       <div className="main container">
         <h1>Article Header Generator</h1>
         {this.state.imgs.length > 0 && <canvas ref={this.mainCanvas} className="main-canvas"/>}
+
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
+        <DragDropContext onDragEnd={this.onDragEnd}>
+          <Droppable droppableId="droppable">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+              >
+                {this.state.imgs.map((item, index) => (
+                  <Draggable key={item.img.src} draggableId={item.img.src} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        {item.name}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+
         <input id="fileInput" type="file" accept="image/*" multiple ref={this.fileInput} hidden onChange={this.addLocal}/>
         <label htmlFor="fileInput" className="button">Add local images</label>
         <button className="button button-outline" onClick={this.addRemote}>Add from URL</button>
