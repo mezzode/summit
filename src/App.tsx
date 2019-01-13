@@ -3,6 +3,7 @@ import {DragDropContext, Droppable, Draggable, OnDragEndResponder} from 'react-b
 import 'milligram';
 import 'normalize.css';
 import './App.css';
+import { Canvas } from './Canvas';
 
 interface Props {}
 
@@ -24,78 +25,7 @@ class App extends Component<Props, State> {
     canvasUrl: null,
   }
 
-  private mainCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
-
-  private calcFullPositions(imgs: HTMLImageElement[], spacing: number) {
-    const maxHeight = Math.max(...imgs.map(({height}) => height));
-
-    let x = spacing;
-
-    // calc positions (for drawing later since resizing the canvas clears it)
-    const positions = [];
-    for (const img of imgs) {
-      // TODO: put plus signs in between imgs
-      const y = (maxHeight - img.height) / 2;
-      positions.push({ img, x, y, });
-      x += img.width + spacing;
-    }
-    return {
-      positions,
-      fullWidth: x,
-    }
-  }
-
-  private drawMiniPositions(imgs: HTMLImageElement[], spacing: number): void {
-    this.clearCanvasUrl();
-    const {positions, fullWidth} = this.calcFullPositions(
-      imgs,
-      spacing,
-    );
-    if (positions.length === 0) {
-      return;
-    }
-
-    const mainCanvas = this.mainCanvas.current;
-    if (!mainCanvas) {
-      throw new Error('mainCanvas missing');
-    }
-
-    // change canvas dims
-    const maxHeight = Math.max(...positions.map(({img}) => img.height));
-    mainCanvas.height = maxHeight;
-    mainCanvas.width = fullWidth;
-
-    const ctx = mainCanvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('ctx missing');
-    }
-
-    positions.forEach(({img, x, y}) => ctx.drawImage(
-      img,
-      x,
-      y,
-      img.width,
-      img.height
-    ));
-
-    this.updateCanvasUrl(mainCanvas);
-  }
-
-  updateCanvasUrl(mainCanvas: HTMLCanvasElement) {
-    if (!mainCanvas.toBlob) {
-      // toBlob not supported, fall back to data url
-      this.setState({ canvasUrl: mainCanvas.toDataURL() });
-      return;
-    }
-
-    mainCanvas.toBlob(blob => {
-      if (!blob) {
-        throw new Error();
-      }
-      this.setState({ canvasUrl: URL.createObjectURL(blob) });
-    });
-  }
 
   addLocal = () => {
     const fileInput = this.fileInput.current;
@@ -115,14 +45,12 @@ class App extends Component<Props, State> {
       img.src = url;
 
       img.addEventListener('load', () => {
-        console.log('loaded');
         loaded += 1;
         if (loaded === toLoad) {
-          console.log('all loaded');
-          this.drawMiniPositions(
-            this.state.imgs.map(img => img.img),
-            parseInt(this.state.spacingInput) || 0
-          );
+          // all loaded
+          this.setState({ 
+            imgs: [...this.state.imgs, ...imgs],
+          });
         }
       });
 
@@ -131,10 +59,6 @@ class App extends Component<Props, State> {
         name: f.name,
       };
     })
-
-    this.setState({ 
-      imgs: [...this.state.imgs, ...imgs],
-    });
 
     // clear input
     fileInput.value = '';
@@ -159,28 +83,13 @@ class App extends Component<Props, State> {
         }],
         remoteUrl: '',
       })
-      this.drawMiniPositions(
-        this.state.imgs.map(img => img.img),
-        parseInt(this.state.spacingInput) || 0
-      );
     });
   }
 
   clear: MouseEventHandler<HTMLButtonElement> = () => {
-    this.clearCanvasUrl();
     this.setState({
       imgs: [],
     });
-  }
-
-  clearCanvasUrl() {
-    const { canvasUrl } = this.state;
-    this.setState({
-      canvasUrl: null,
-    });
-    if (canvasUrl) {
-      URL.revokeObjectURL(canvasUrl);
-    }
   }
 
   changeUrl: ChangeEventHandler<HTMLInputElement> = e => {
@@ -190,11 +99,6 @@ class App extends Component<Props, State> {
   changeSpacing: ChangeEventHandler<HTMLInputElement> = e => {
     const spacingInput = e.target.value;
     this.setState({ spacingInput });
-    // we need to pass spacing directly here since may draw before state has been updated
-    this.drawMiniPositions(
-      this.state.imgs.map(img => img.img),
-      parseInt(spacingInput) || 0
-    );
   }
 
   reorder<T>(arr: T[], srcIndex: number, destIndex: number): T[] {
@@ -219,20 +123,24 @@ class App extends Component<Props, State> {
     this.setState({
       imgs,
     });
+  }
 
-    this.drawMiniPositions(
-      imgs.map(img => img.img),
-      parseInt(this.state.spacingInput) || 0
-    );
+  onUrlChange = (canvasUrl: string|null) => {
+    this.setState({ canvasUrl });
   }
 
   render() {
-    const { remoteUrl, spacingInput, canvasUrl } = this.state;
+    const { remoteUrl, spacingInput, canvasUrl, imgs } = this.state;
+    const spacing = parseInt(this.state.spacingInput) || 0;
     return (
       <div className="main container">
         <h1>Article Header Generator</h1>
-        {this.state.imgs.length > 0 && <canvas ref={this.mainCanvas} className="main-canvas"/>}
-
+        <Canvas
+          className="main-canvas"
+          imgs={imgs.map(({img}) => img)}
+          spacing={spacing}
+          onUrlChange={this.onUrlChange}
+        />
         {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
         <DragDropContext onDragEnd={this.onDragEnd}>
           <Droppable droppableId="droppable">
