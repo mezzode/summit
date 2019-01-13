@@ -1,11 +1,20 @@
 import 'milligram';
 import 'normalize.css';
 import React, { ChangeEventHandler, Component, MouseEventHandler } from 'react';
-import { DragDropContext, Draggable, Droppable, OnDragEndResponder } from 'react-beautiful-dnd';
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  OnDragEndResponder,
+} from 'react-beautiful-dnd';
 import './App.css';
 import { Canvas } from './Canvas';
 
-const reorder = <T extends {}>(arr: T[], srcIndex: number, destIndex: number): T[] => {
+const reorder = <T extends {}>(
+  arr: T[],
+  srcIndex: number,
+  destIndex: number,
+): T[] => {
   const arrCopy = [...arr];
   const [moved] = arrCopy.splice(srcIndex, 1);
   arrCopy.splice(destIndex, 0, moved);
@@ -44,19 +53,23 @@ export class App extends Component<Props, State> {
         <h1>Article Header Generator</h1>
         <Canvas
           className='main-canvas'
-          imgs={imgs.map(({img}) => img)}
+          imgs={imgs.map(({ img }) => img)}
           spacing={spacing}
           onUrlChange={this.onUrlChange}
         />
-        {this.state.imgs.map(img => <p key={img.img.src}>{img.name}</p>) /* TODO: proper component */}
+        {this.state.imgs.map(img => (
+          <p key={img.img.src}>{img.name}</p>
+        )) /* TODO: proper component */}
         <DragDropContext onDragEnd={this.onDragEnd}>
           <Droppable droppableId='droppable'>
             {(provided, snapshot) => (
-              <div
-                ref={provided.innerRef}
-              >
+              <div ref={provided.innerRef}>
                 {this.state.imgs.map((item, index) => (
-                  <Draggable key={item.img.src} draggableId={item.img.src} index={index}>
+                  <Draggable
+                    key={item.img.src}
+                    draggableId={item.img.src}
+                    index={index}
+                  >
                     {(providedDraggable, snapshotDraggable) => (
                       <div
                         ref={providedDraggable.innerRef}
@@ -78,19 +91,35 @@ export class App extends Component<Props, State> {
           id='fileInput'
           type='file'
           accept='image/*'
-          multiple ref={this.fileInput}
+          multiple
+          ref={this.fileInput}
           hidden
           onChange={this.addLocal}
         />
-        <label htmlFor='fileInput' className='button'>Add local images</label>
-        <button className='button button-outline' onClick={this.addRemote}>Add from URL</button>
-        <button className='button button-clear' onClick={this.clear}>Clear</button>
-        {remoteUrl !== null && <input type='text' onChange={this.changeUrl} value={remoteUrl} />}
-        <input type='number' onChange={this.changeSpacing} value={spacingInput}  />
-        {canvasUrl ?
-          <a className='button' href={canvasUrl} download='header.png'>Save</a> :
+        <label htmlFor='fileInput' className='button'>
+          Add local images
+        </label>
+        <button className='button button-outline' onClick={this.addRemote}>
+          Add from URL
+        </button>
+        <button className='button button-clear' onClick={this.clear}>
+          Clear
+        </button>
+        {remoteUrl !== null && (
+          <input type='text' onChange={this.changeUrl} value={remoteUrl} />
+        )}
+        <input
+          type='number'
+          onChange={this.changeSpacing}
+          value={spacingInput}
+        />
+        {canvasUrl ? (
+          <a className='button' href={canvasUrl} download='header.png'>
+            Save
+          </a>
+        ) : (
           <a className='button disabled-link-btn'>Save</a>
-        }
+        )}
       </div>
     );
   }
@@ -145,10 +174,13 @@ export class App extends Component<Props, State> {
     img.addEventListener('load', () => {
       const [name] = remoteUrl.split('/').slice(-1);
       this.setState({
-        imgs: [...imgs, {
-          img,
-          name,
-        }],
+        imgs: [
+          ...imgs,
+          {
+            img,
+            name,
+          },
+        ],
         remoteUrl: '',
       });
     });
@@ -169,17 +201,13 @@ export class App extends Component<Props, State> {
     });
   }
 
-  private onDragEnd: OnDragEndResponder = ({destination, source}) => {
+  private onDragEnd: OnDragEndResponder = ({ destination, source }) => {
     if (!destination) {
       // Dropped outside list
       return;
     }
 
-    const imgs = reorder(
-      this.state.imgs,
-      destination.index,
-      source.index,
-    );
+    const imgs = reorder(this.state.imgs, destination.index, source.index);
 
     this.setState({
       imgs,

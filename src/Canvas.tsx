@@ -20,7 +20,7 @@ const imgsDiffer = (a: HTMLImageElement[], b: HTMLImageElement[]) => {
 };
 
 const calcPositions = (imgs: HTMLImageElement[], spacing: number) => {
-  const maxHeight = Math.max(...imgs.map(({height}) => height));
+  const maxHeight = Math.max(...imgs.map(({ height }) => height));
 
   let x = spacing;
 
@@ -62,8 +62,10 @@ export class Canvas extends Component<Props> {
   }
 
   public render() {
-    return this.props.imgs.length > 0 && (
-      <canvas ref={this.canvas} className={this.props.className}/>
+    return (
+      this.props.imgs.length > 0 && (
+        <canvas ref={this.canvas} className={this.props.className} />
+      )
     );
   }
 
@@ -71,7 +73,7 @@ export class Canvas extends Component<Props> {
     // Clear old url
     this.setState({ canvasUrl: null });
 
-    const {positions, fullWidth} = calcPositions(
+    const { positions, fullWidth } = calcPositions(
       this.props.imgs,
       this.props.spacing,
     );
@@ -85,7 +87,7 @@ export class Canvas extends Component<Props> {
     }
 
     // Change canvas dims
-    const maxHeight = Math.max(...positions.map(({img}) => img.height));
+    const maxHeight = Math.max(...positions.map(({ img }) => img.height));
     mainCanvas.height = maxHeight;
     mainCanvas.width = fullWidth;
 
@@ -94,13 +96,9 @@ export class Canvas extends Component<Props> {
       throw new Error('ctx missing');
     }
 
-    positions.forEach(({img, x, y}) => ctx.drawImage(
-      img,
-      x,
-      y,
-      img.width,
-      img.height,
-    ));
+    positions.forEach(({ img, x, y }) =>
+      ctx.drawImage(img, x, y, img.width, img.height),
+    );
 
     this.updateCanvasUrl(mainCanvas);
   }
