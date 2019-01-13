@@ -9,6 +9,7 @@ import {
 } from 'react-beautiful-dnd';
 import './App.css';
 import { Canvas } from './Canvas';
+import { FileInput } from './FileInput';
 
 const reorder = <T extends {}>(
   arr: T[],
@@ -57,9 +58,6 @@ export class App extends Component<Props, State> {
           spacing={spacing}
           onUrlChange={this.onUrlChange}
         />
-        {this.state.imgs.map(img => (
-          <p key={img.img.src}>{img.name}</p>
-        )) /* TODO: proper component */}
         <DragDropContext onDragEnd={this.onDragEnd}>
           <Droppable droppableId='droppable'>
             {(provided, snapshot) => (
@@ -86,19 +84,16 @@ export class App extends Component<Props, State> {
             )}
           </Droppable>
         </DragDropContext>
-
-        <input
+        <FileInput
           id='fileInput'
-          type='file'
           accept='image/*'
+          className='button'
           multiple
-          ref={this.fileInput}
-          hidden
+          forwardedRef={this.fileInput}
           onChange={this.addLocal}
-        />
-        <label htmlFor='fileInput' className='button'>
+        >
           Add local images
-        </label>
+        </FileInput>
         <button className='button button-outline' onClick={this.addRemote}>
           Add from URL
         </button>
