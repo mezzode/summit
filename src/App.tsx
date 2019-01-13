@@ -11,7 +11,7 @@ interface State {
     img: HTMLImageElement;
   }[],
   remoteUrl: string|null;
-  spacing: number;
+  spacingInput: string;
   canvasUrl: string|null;
   format: string;
 }
@@ -20,7 +20,7 @@ class App extends Component<Props, State> {
   public state: State = {
     imgs: [],
     remoteUrl: '',
-    spacing: 40,
+    spacingInput: '40',
     canvasUrl: null,
     format: 'png',
   }
@@ -28,12 +28,10 @@ class App extends Component<Props, State> {
   private mainCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
 
-  private calcFullPositions() {
-    const imgs = this.state.imgs.map(img => img.img);
-
+  private calcFullPositions(imgs: HTMLImageElement[], spacing: number) {
     const maxHeight = Math.max(...imgs.map(({height}) => height));
 
-    let x = this.state.spacing;
+    let x = spacing;
 
     // calc positions (for drawing later since resizing the canvas clears it)
     const positions = [];
@@ -41,7 +39,7 @@ class App extends Component<Props, State> {
       // TODO: put plus signs in between imgs
       const y = (maxHeight - img.height) / 2;
       positions.push({ img, x, y, });
-      x += img.width + this.state.spacing;
+      x += img.width + spacing;
     }
     return {
       positions,
@@ -49,9 +47,12 @@ class App extends Component<Props, State> {
     }
   }
 
-  private drawMiniPositions(): void {
+  private drawMiniPositions(spacing: number): void {
     this.clearCanvasUrl();
-    const {positions, fullWidth} = this.calcFullPositions();
+    const {positions, fullWidth} = this.calcFullPositions(
+      this.state.imgs.map(img => img.img),
+      spacing,
+    );
     if (positions.length === 0) {
       return;
     }
@@ -118,7 +119,7 @@ class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           console.log('all loaded');
-          this.drawMiniPositions();
+          this.drawMiniPositions(parseInt(this.state.spacingInput) || 0);
         }
       });
 
@@ -155,7 +156,7 @@ class App extends Component<Props, State> {
         }],
         remoteUrl: '',
       })
-      this.drawMiniPositions();
+      this.drawMiniPositions(parseInt(this.state.spacingInput) || 0);
     });
   }
 
@@ -181,12 +182,14 @@ class App extends Component<Props, State> {
   }
 
   changeSpacing: ChangeEventHandler<HTMLInputElement> = e => {
-    this.setState({ spacing: parseInt(e.target.value) });
-    this.drawMiniPositions();
+    const spacingInput = e.target.value;
+    this.setState({ spacingInput });
+    // we need to pass spacing directly here since may draw before state has been updated
+    this.drawMiniPositions(parseInt(spacingInput) || 0);
   }
 
   render() {
-    const { remoteUrl, spacing, canvasUrl, format } = this.state;
+    const { remoteUrl, spacingInput, canvasUrl, format } = this.state;
     return (
       <div className="main container">
         <h1>Article Header Generator</h1>
@@ -197,7 +200,7 @@ class App extends Component<Props, State> {
         <button className="button button-outline" onClick={this.addRemote}>Add from URL</button>
         <button className="button button-clear" onClick={this.clear}>Clear</button>
         {remoteUrl !== null && <input type="text" onChange={this.changeUrl} value={remoteUrl} />}
-        <input type="number" onChange={this.changeSpacing} value={spacing}  />
+        <input type="number" onChange={this.changeSpacing} value={spacingInput}  />
         {canvasUrl ?
           <a className="button" href={canvasUrl} download={`header.${format}`}>Save</a> :
           <a className="button disabled-link-btn">Save</a>
