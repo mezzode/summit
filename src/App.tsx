@@ -1,4 +1,6 @@
-import React, { Component, ChangeEventHandler } from 'react';
+import React, { Component, ChangeEventHandler, EventHandler, MouseEventHandler } from 'react';
+import 'milligram';
+import 'normalize.css';
 import './App.css';
 
 interface Props {}
@@ -8,25 +10,30 @@ interface State {
     name: string;
     img: HTMLImageElement;
   }[],
-  url: string|null;
+  remoteUrl: string|null;
+  spacing: number;
+  canvasUrl: string|null;
+  format: string;
 }
 
 class App extends Component<Props, State> {
   public state: State = {
     imgs: [],
-    url: '',
+    remoteUrl: '',
+    spacing: 40,
+    canvasUrl: null,
+    format: 'png',
   }
 
   private mainCanvas = React.createRef<HTMLCanvasElement>();
   private fileInput = React.createRef<HTMLInputElement>();
-  private static readonly spacing = 40;
 
   private calcFullPositions() {
     const imgs = this.state.imgs.map(img => img.img);
 
     const maxHeight = Math.max(...imgs.map(({height}) => height));
 
-    let x = App.spacing;
+    let x = this.state.spacing;
 
     // calc positions (for drawing later since resizing the canvas clears it)
     const positions = [];
@@ -34,7 +41,7 @@ class App extends Component<Props, State> {
       // TODO: put plus signs in between imgs
       const y = (maxHeight - img.height) / 2;
       positions.push({ img, x, y, });
-      x += img.width + App.spacing;
+      x += img.width + this.state.spacing;
     }
     return {
       positions,
@@ -43,6 +50,7 @@ class App extends Component<Props, State> {
   }
 
   private drawMiniPositions(): void {
+    this.clearCanvasUrl();
     const {positions, fullWidth} = this.calcFullPositions();
     if (positions.length === 0) {
       return;
@@ -70,6 +78,22 @@ class App extends Component<Props, State> {
       img.width,
       img.height
     ));
+
+    const mimeType = `image/${this.state.format}`;
+    // image/jpeg, image/webp
+
+    if (!mainCanvas.toBlob) {
+      // toBlob not supported, fallback to data url
+      this.setState({ canvasUrl: mainCanvas.toDataURL(mimeType) });
+      return;
+    }
+
+    mainCanvas.toBlob(blob => {
+      if (!blob) {
+        throw new Error();
+      }
+      this.setState({ canvasUrl: URL.createObjectURL(blob) });
+    }, mimeType);
   }
 
   addLocal = () => {
@@ -85,7 +109,7 @@ class App extends Component<Props, State> {
     const toLoad = files.length;
     let loaded = 0;
     const imgs = Array.from(files).map(f => {
-      const url = window.URL.createObjectURL(f);
+      const url = URL.createObjectURL(f);
       const img = new Image();
       img.src = url;
 
@@ -113,38 +137,56 @@ class App extends Component<Props, State> {
   }
 
   addRemote = () => {
-    const { imgs, url } = this.state;
-    if (url === null) {
+    const { imgs, remoteUrl } = this.state;
+    if (remoteUrl === null) {
       throw new Error();
     }
 
     const img = new Image();
-    img.src = url;
+    img.src = remoteUrl;
     img.crossOrigin = 'anonymous';
 
     img.addEventListener('load', () => {
-      const [name] = url.split('/').slice(-1);
+      const [name] = remoteUrl.split('/').slice(-1);
       this.setState({
         imgs: [...imgs, {
           img,
           name,
         }],
-        url: '',
+        remoteUrl: '',
       })
       this.drawMiniPositions();
     });
   }
 
-  clear = () => {
-    this.setState({ imgs: [] });
+  clear: MouseEventHandler<HTMLButtonElement> = () => {
+    this.clearCanvasUrl();
+    this.setState({
+      imgs: [],
+    });
+  }
+
+  clearCanvasUrl() {
+    const { canvasUrl } = this.state;
+    this.setState({
+      canvasUrl: null,
+    });
+    if (canvasUrl) {
+      URL.revokeObjectURL(canvasUrl);
+    }
   }
 
   changeUrl: ChangeEventHandler<HTMLInputElement> = e => {
-    this.setState({ url: e.target.value });
+    this.setState({ remoteUrl: e.target.value });
+  }
+
+  changeSpacing: ChangeEventHandler<HTMLInputElement> = e => {
+    this.setState({ spacing: parseInt(e.target.value) });
+    this.drawMiniPositions();
   }
 
   render() {
-    const { url } = this.state;
+    const { remoteUrl, spacing, canvasUrl, format } = this.state;
     return (
       <div className="main container">
         <h1>Article Header Generator</h1>
@@ -154,7 +196,12 @@ class App extends Component<Props, State> {
         <label htmlFor="fileInput" className="button">Add local images</label>
         <button className="button button-outline" onClick={this.addRemote}>Add from URL</button>
         <button className="button button-clear" onClick={this.clear}>Clear</button>
-        {url !== null && <input type="text" onChange={this.changeUrl} value={url} />}
+        {remoteUrl !== null && <input type="text" onChange={this.changeUrl} value={remoteUrl} />}
+        <input type="number" onChange={this.changeSpacing} value={spacing}  />
+        {canvasUrl ?
+          <a className="button" href={canvasUrl} download={`header.${format}`}>Save</a> :
+          <a className="button disabled-link-btn">Save</a>
+        }
       </div>
     );
   }
