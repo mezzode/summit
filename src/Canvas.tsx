@@ -48,7 +48,10 @@ export class Canvas extends Component<Props> {
   private canvas = React.createRef<HTMLCanvasElement>();
 
   public componentDidUpdate(prevProps: Props, prevState: State) {
-    if (imgsDiffer(prevProps.imgs, this.props.imgs)) {
+    if (
+      imgsDiffer(prevProps.imgs, this.props.imgs) ||
+      prevProps.spacing !== this.props.spacing
+    ) {
       this.updateCanvas();
     }
 

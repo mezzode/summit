@@ -23,6 +23,13 @@ const reorder = <T extends {}>(
   return arrCopy;
 };
 
+const delIndex = <T extends {}>(arr: T[], index: number): T[] => {
+  const arrCopy = [...arr];
+  arrCopy.splice(index, 1);
+
+  return arrCopy;
+};
+
 interface Props {}
 
 interface State {
@@ -33,20 +40,28 @@ interface State {
   }>;
   remoteUrl: string | null;
   spacingInput: string;
+  spacingOpen: boolean;
 }
 
 export class App extends Component<Props, State> {
   public state: State = {
     canvasUrl: null,
     imgs: [],
-    remoteUrl: '',
+    remoteUrl: null,
     spacingInput: '40',
+    spacingOpen: false,
   };
 
   private fileInput = React.createRef<HTMLInputElement>();
 
   public render() {
-    const { remoteUrl, spacingInput, canvasUrl, imgs } = this.state;
+    const {
+      remoteUrl,
+      spacingInput,
+      canvasUrl,
+      imgs,
+      spacingOpen,
+    } = this.state;
     const spacing = parseInt(this.state.spacingInput, 10) || 0;
 
     return (
@@ -58,62 +73,145 @@ export class App extends Component<Props, State> {
           spacing={spacing}
           onUrlChange={this.onUrlChange}
         />
-        <DragDropContext onDragEnd={this.onDragEnd}>
-          <Droppable droppableId='droppable'>
-            {(provided, snapshot) => (
-              <div ref={provided.innerRef}>
-                {this.state.imgs.map((item, index) => (
-                  <Draggable
-                    key={item.img.src}
-                    draggableId={item.img.src}
-                    index={index}
-                  >
-                    {(providedDraggable, snapshotDraggable) => (
-                      <div
-                        ref={providedDraggable.innerRef}
-                        {...providedDraggable.draggableProps}
-                        {...providedDraggable.dragHandleProps}
-                      >
-                        {item.name}
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        <FileInput
-          id='fileInput'
-          accept='image/*'
-          className='button'
-          multiple
-          forwardedRef={this.fileInput}
-          onChange={this.addLocal}
-        >
-          Add local images
-        </FileInput>
-        <button className='button button-outline' onClick={this.addRemote}>
-          Add from URL
-        </button>
-        <button className='button button-clear' onClick={this.clear}>
-          Clear
-        </button>
-        {remoteUrl !== null && (
-          <input type='text' onChange={this.changeUrl} value={remoteUrl} />
+        {imgs.length > 0 && (
+          <DragDropContext onDragEnd={this.onDragEnd}>
+            <Droppable droppableId='droppable'>
+              {(provided, snapshot) => (
+                <div ref={provided.innerRef}>
+                  {imgs.map((item, index) => (
+                    <Draggable
+                      key={item.img.src}
+                      draggableId={item.img.src}
+                      index={index}
+                    >
+                      {(providedDraggable, snapshotDraggable) => (
+                        <div
+                          ref={providedDraggable.innerRef}
+                          {...providedDraggable.draggableProps}
+                          {...providedDraggable.dragHandleProps}
+                          style={{
+                            ...providedDraggable.draggableProps.style,
+                            alignItems: 'center',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <span>{item.name}</span>
+                          <button
+                            onClick={this.removeImg(index)}
+                            className='button button-clear'
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
-        <input
-          type='number'
-          onChange={this.changeSpacing}
-          value={spacingInput}
-        />
-        {canvasUrl ? (
-          <a className='button' href={canvasUrl} download='header.png'>
-            Save
-          </a>
-        ) : (
-          <a className='button disabled-link-btn'>Save</a>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            <button
+              className='button button-outline'
+              onClick={this.clear}
+              disabled={imgs.length === 0}
+            >
+              Clear
+            </button>
+            {canvasUrl ? (
+              <a className='button' href={canvasUrl} download='header.png'>
+                Save
+              </a>
+            ) : (
+              <a className='button disabled-link-btn'>Save</a>
+            )}
+            <button
+              className={`button${!spacingOpen ? ' button-outline' : ''}`}
+              onClick={this.toggleSpacing}
+            >
+              Edit Spacing
+            </button>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            <FileInput
+              id='fileInput'
+              accept='image/*'
+              className='button button-outline'
+              multiple
+              forwardedRef={this.fileInput}
+              onChange={this.addLocal}
+            >
+              Add local images
+            </FileInput>
+            <button
+              className={`button${remoteUrl === null ? ' button-outline' : ''}`}
+              onClick={this.toggleRemote}
+            >
+              Add from URL
+            </button>
+          </div>
+        </div>
+        {remoteUrl !== null && (
+          <div
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+            }}
+          >
+            <input
+              type='text'
+              onChange={this.changeUrl}
+              value={remoteUrl}
+              placeholder='URL'
+            />
+            <button className='button button-outline' onClick={this.addRemote}>
+              Add
+            </button>
+          </div>
+        )}
+        {spacingOpen && (
+          <div
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: 4,
+            }}
+          >
+            <label htmlFor='spacing'>Spacing (px)</label>
+            <input
+              id='spacing'
+              type='number'
+              onChange={this.changeSpacing}
+              value={spacingInput}
+              style={{
+                marginLeft: 12,
+                maxWidth: 100,
+              }}
+            />
+          </div>
         )}
       </div>
     );
@@ -156,7 +254,8 @@ export class App extends Component<Props, State> {
     fileInput.value = '';
   }
 
-  private addRemote = () => {
+  private addRemote: MouseEventHandler<HTMLButtonElement> = e => {
+    e.preventDefault();
     const { imgs, remoteUrl } = this.state;
     if (remoteUrl === null) {
       throw new Error();
@@ -202,7 +301,7 @@ export class App extends Component<Props, State> {
       return;
     }
 
-    const imgs = reorder(this.state.imgs, destination.index, source.index);
+    const imgs = reorder(this.state.imgs, source.index, destination.index);
 
     this.setState({
       imgs,
@@ -211,5 +310,24 @@ export class App extends Component<Props, State> {
 
   private onUrlChange = (canvasUrl: string | null) => {
     this.setState({ canvasUrl });
+  }
+
+  private removeImg = (
+    index: number,
+  ): MouseEventHandler<HTMLButtonElement> => () =>
+    this.setState({
+      imgs: delIndex(this.state.imgs, index),
+    })
+
+  private toggleRemote = () => {
+    this.setState({
+      remoteUrl: this.state.remoteUrl === null ? '' : null,
+    });
+  }
+
+  private toggleSpacing = () => {
+    this.setState({
+      spacingOpen: !this.state.spacingOpen,
+    });
   }
 }
