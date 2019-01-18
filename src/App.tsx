@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import 'milligram';
 import 'normalize.css';
-import React, { ChangeEventHandler, Component, MouseEventHandler } from 'react';
+import React, { ChangeEvent, Component, MouseEventHandler } from 'react';
 import {
   DragDropContext,
   Draggable,
@@ -209,7 +209,8 @@ export class App extends Component<Props, State> {
           >
             <input
               type='text'
-              onChange={this.changeUrl}
+              id='remoteUrl'
+              onChange={this.changeInput}
               value={remoteUrl}
               placeholder='URL'
             />
@@ -236,9 +237,9 @@ export class App extends Component<Props, State> {
             >
               <label htmlFor='spacing'>Spacing (px)</label>
               <input
-                id='spacing'
+                id='spacingInput'
                 type='number'
-                onChange={this.changeSpacing}
+                onChange={this.changeInput}
                 value={spacingInput}
                 style={{
                   marginLeft: 12,
@@ -258,9 +259,9 @@ export class App extends Component<Props, State> {
             >
               <label htmlFor='margin'>Margin (px)</label>
               <input
-                id='margin'
+                id='marginInput'
                 type='number'
-                onChange={this.changeMargin}
+                onChange={this.changeInput}
                 value={marginInput}
                 style={{
                   marginLeft: 12,
@@ -353,14 +354,12 @@ export class App extends Component<Props, State> {
     });
   }
 
-  private changeMargin: ChangeEventHandler<HTMLInputElement> = e =>
-    this.setState({ marginInput: e.target.value })
-
-  private changeSpacing: ChangeEventHandler<HTMLInputElement> = e =>
-    this.setState({ spacingInput: e.target.value })
-
-  private changeUrl: ChangeEventHandler<HTMLInputElement> = e =>
-    this.setState({ remoteUrl: e.target.value })
+  private changeInput = <T extends keyof State>(
+    e: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const newState: { [P in T]: State[P] } = { [e.target.id]: e.target.value };
+    this.setState(newState);
+  }
 
   private clear: MouseEventHandler<HTMLButtonElement> = () => {
     this.setState({
