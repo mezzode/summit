@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 interface Props {
   className: string;
   imgs: HTMLImageElement[];
+  margin: number;
   spacing: number;
   onUrlChange(canvasUrl: string | null): void;
 }
@@ -19,12 +20,16 @@ const imgsDiffer = (a: HTMLImageElement[], b: HTMLImageElement[]) => {
   return !a.every((aImg, i) => aImg === b[i]);
 };
 
-const calcPositions = (imgs: HTMLImageElement[], spacing: number) => {
+const calcPositions = (
+  imgs: HTMLImageElement[],
+  spacing: number,
+  margin: number,
+) => {
   const verticalWhitespace = 2; // Top and bottom
   const maxHeight = Math.max(...imgs.map(({ height }) => height));
-  const fullHeight = maxHeight + spacing * verticalWhitespace;
+  const fullHeight = maxHeight + margin * verticalWhitespace;
 
-  let x = spacing;
+  let x = margin;
 
   // Calc positions (for drawing later since resizing the canvas clears it)
   const positions = [];
@@ -33,6 +38,7 @@ const calcPositions = (imgs: HTMLImageElement[], spacing: number) => {
     positions.push({ img, x, y });
     x += img.width + spacing;
   }
+  x += margin - spacing;
 
   return {
     fullHeight,
@@ -71,7 +77,8 @@ export class Canvas extends Component<Props> {
   public componentDidUpdate(prevProps: Props, prevState: State) {
     if (
       imgsDiffer(prevProps.imgs, this.props.imgs) ||
-      prevProps.spacing !== this.props.spacing
+      prevProps.spacing !== this.props.spacing ||
+      prevProps.margin !== this.props.margin
     ) {
       this.updateCanvas();
     }
@@ -96,11 +103,12 @@ export class Canvas extends Component<Props> {
   private updateCanvas(): void {
     // Clear old url
     this.setState({ canvasUrl: null });
-    const { spacing } = this.props;
+    const { margin, spacing } = this.props;
 
     const { positions, fullHeight, fullWidth } = calcPositions(
       this.props.imgs,
       spacing,
+      margin,
     );
     if (positions.length === 0) {
       return;

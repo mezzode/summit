@@ -36,6 +36,12 @@ const calcDefaultSpacing = (img: HTMLImageElement): number => {
   return img.width * defaultSpacingFactor;
 };
 
+const calcDefaultMargin = (img: HTMLImageElement): number => {
+  const defaultMarginFactor = 0.1;
+
+  return img.width * defaultMarginFactor;
+};
+
 interface Props {}
 
 interface State {
@@ -44,6 +50,8 @@ interface State {
     img: HTMLImageElement;
     name: string;
   }>;
+  marginInput: string;
+  marginOpen: boolean;
   remoteUrl: string | null;
   spacingInput: string;
   spacingOpen: boolean;
@@ -53,6 +61,8 @@ export class App extends Component<Props, State> {
   public state: State = {
     canvasUrl: null,
     imgs: [],
+    marginInput: '',
+    marginOpen: false,
     remoteUrl: null,
     spacingInput: '',
     spacingOpen: false,
@@ -67,7 +77,10 @@ export class App extends Component<Props, State> {
       canvasUrl,
       imgs,
       spacingOpen,
+      marginOpen,
+      marginInput,
     } = this.state;
+    const margin = parseInt(this.state.marginInput, 10) || 0;
     const spacing = parseInt(this.state.spacingInput, 10) || 0;
 
     return (
@@ -76,6 +89,7 @@ export class App extends Component<Props, State> {
         <Canvas
           className='main-canvas'
           imgs={imgs.map(({ img }) => img)}
+          margin={margin}
           spacing={spacing}
           onUrlChange={this.onUrlChange}
         />
@@ -153,6 +167,12 @@ export class App extends Component<Props, State> {
             >
               Edit Spacing
             </button>
+            <button
+              className={`button${!marginOpen ? ' button-outline' : ''}`}
+              onClick={this.toggleMargin}
+            >
+              Edit Margin
+            </button>
           </div>
           <div
             style={{
@@ -197,28 +217,58 @@ export class App extends Component<Props, State> {
             </button>
           </div>
         )}
-        {spacingOpen && (
-          <div
-            style={{
-              alignItems: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: 4,
-            }}
-          >
-            <label htmlFor='spacing'>Spacing (px)</label>
-            <input
-              id='spacing'
-              type='number'
-              onChange={this.changeSpacing}
-              value={spacingInput}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          {spacingOpen && (
+            <div
               style={{
-                marginLeft: 12,
-                maxWidth: 100,
+                alignItems: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                margin: '4px 12px',
               }}
-            />
-          </div>
-        )}
+            >
+              <label htmlFor='spacing'>Spacing (px)</label>
+              <input
+                id='spacing'
+                type='number'
+                onChange={this.changeSpacing}
+                value={spacingInput}
+                style={{
+                  marginLeft: 12,
+                  maxWidth: 100,
+                }}
+              />
+            </div>
+          )}
+          {marginOpen && (
+            <div
+              style={{
+                alignItems: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                margin: '4px 12px',
+              }}
+            >
+              <label htmlFor='margin'>Margin (px)</label>
+              <input
+                id='margin'
+                type='number'
+                onChange={this.changeMargin}
+                value={marginInput}
+                style={{
+                  marginLeft: 12,
+                  maxWidth: 100,
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -244,12 +294,16 @@ export class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           // All loaded
-          const { imgs, spacingInput } = this.state;
+          const { imgs, spacingInput, marginInput } = this.state;
           const widestImg = newImgs.reduce((widest, curr) =>
             widest.img.width > curr.img.width ? widest : curr,
           );
           this.setState({
             imgs: [...imgs, ...newImgs],
+            marginInput:
+              imgs.length === 0
+                ? calcDefaultMargin(widestImg.img).toString()
+                : marginInput,
             spacingInput:
               imgs.length === 0
                 ? calcDefaultSpacing(widestImg.img).toString()
@@ -269,8 +323,8 @@ export class App extends Component<Props, State> {
   }
 
   private addRemote: MouseEventHandler<HTMLButtonElement> = e => {
-    e.preventDefault();
-    const { imgs, remoteUrl, spacingInput } = this.state;
+    // Unnecessary? e.preventDefault();
+    const { imgs, remoteUrl, spacingInput, marginInput } = this.state;
     if (remoteUrl === null) {
       throw new Error();
     }
@@ -289,6 +343,8 @@ export class App extends Component<Props, State> {
             name,
           },
         ],
+        marginInput:
+          imgs.length === 0 ? calcDefaultMargin(img).toString() : marginInput,
         remoteUrl: '',
         spacingInput:
           imgs.length === 0 ? calcDefaultSpacing(img).toString() : spacingInput,
@@ -296,14 +352,14 @@ export class App extends Component<Props, State> {
     });
   }
 
-  private changeSpacing: ChangeEventHandler<HTMLInputElement> = e => {
-    const spacingInput = e.target.value;
-    this.setState({ spacingInput });
-  }
+  private changeMargin: ChangeEventHandler<HTMLInputElement> = e =>
+    this.setState({ marginInput: e.target.value })
 
-  private changeUrl: ChangeEventHandler<HTMLInputElement> = e => {
-    this.setState({ remoteUrl: e.target.value });
-  }
+  private changeSpacing: ChangeEventHandler<HTMLInputElement> = e =>
+    this.setState({ spacingInput: e.target.value })
+
+  private changeUrl: ChangeEventHandler<HTMLInputElement> = e =>
+    this.setState({ remoteUrl: e.target.value })
 
   private clear: MouseEventHandler<HTMLButtonElement> = () => {
     this.setState({
@@ -334,6 +390,12 @@ export class App extends Component<Props, State> {
     this.setState({
       imgs: delIndex(this.state.imgs, index),
     })
+
+  private toggleMargin = () => {
+    this.setState({
+      marginOpen: !this.state.marginOpen,
+    });
+  }
 
   private toggleRemote = () => {
     this.setState({
