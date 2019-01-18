@@ -11,6 +11,7 @@ import {
 import './App.css';
 import { Canvas } from './Canvas';
 import { FileInput } from './FileInput';
+import { NumInput } from './NumInput';
 
 const reorder = <T extends {}>(
   arr: T[],
@@ -227,48 +228,20 @@ export class App extends Component<Props, State> {
           }}
         >
           {spacingOpen && (
-            <div
-              style={{
-                alignItems: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                margin: '4px 12px',
-              }}
-            >
-              <label htmlFor='spacing'>Spacing (px)</label>
-              <input
-                id='spacingInput'
-                type='number'
-                onChange={this.changeInput}
-                value={spacingInput}
-                style={{
-                  marginLeft: 12,
-                  maxWidth: 100,
-                }}
-              />
-            </div>
+            <NumInput
+              label='Spacing (px)'
+              id='spacingInput'
+              onChange={this.changeInput}
+              value={spacingInput}
+            />
           )}
           {marginOpen && (
-            <div
-              style={{
-                alignItems: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                margin: '4px 12px',
-              }}
-            >
-              <label htmlFor='margin'>Margin (px)</label>
-              <input
-                id='marginInput'
-                type='number'
-                onChange={this.changeInput}
-                value={marginInput}
-                style={{
-                  marginLeft: 12,
-                  maxWidth: 100,
-                }}
-              />
-            </div>
+            <NumInput
+              label='Margin (px)'
+              id='marginInput'
+              onChange={this.changeInput}
+              value={marginInput}
+            />
           )}
         </div>
       </div>
