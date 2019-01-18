@@ -30,6 +30,12 @@ const delIndex = <T extends {}>(arr: T[], index: number): T[] => {
   return arrCopy;
 };
 
+const calcDefaultSpacing = (img: HTMLImageElement): number => {
+  const defaultSpacingFactor = 0.2;
+
+  return img.width * defaultSpacingFactor;
+};
+
 interface Props {}
 
 interface State {
@@ -48,7 +54,7 @@ export class App extends Component<Props, State> {
     canvasUrl: null,
     imgs: [],
     remoteUrl: null,
-    spacingInput: '40',
+    spacingInput: '',
     spacingOpen: false,
   };
 
@@ -229,7 +235,7 @@ export class App extends Component<Props, State> {
 
     const toLoad = files.length;
     let loaded = 0;
-    const imgs = Array.from(files).map(f => {
+    const newImgs = Array.from(files).map(f => {
       const url = URL.createObjectURL(f);
       const img = new Image();
       img.src = url;
@@ -238,8 +244,16 @@ export class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           // All loaded
+          const { imgs, spacingInput } = this.state;
+          const widestImg = newImgs.reduce((widest, curr) =>
+            widest.img.width > curr.img.width ? widest : curr,
+          );
           this.setState({
-            imgs: [...this.state.imgs, ...imgs],
+            imgs: [...imgs, ...newImgs],
+            spacingInput:
+              imgs.length === 0
+                ? calcDefaultSpacing(widestImg.img).toString()
+                : spacingInput,
           });
         }
       });
@@ -256,7 +270,7 @@ export class App extends Component<Props, State> {
 
   private addRemote: MouseEventHandler<HTMLButtonElement> = e => {
     e.preventDefault();
-    const { imgs, remoteUrl } = this.state;
+    const { imgs, remoteUrl, spacingInput } = this.state;
     if (remoteUrl === null) {
       throw new Error();
     }
@@ -276,6 +290,8 @@ export class App extends Component<Props, State> {
           },
         ],
         remoteUrl: '',
+        spacingInput:
+          imgs.length === 0 ? calcDefaultSpacing(img).toString() : spacingInput,
       });
     });
   }
