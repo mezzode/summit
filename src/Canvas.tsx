@@ -4,6 +4,10 @@ interface Props {
   className: string;
   imgs: HTMLImageElement[];
   margin: number;
+  plus: {
+    plusLength: number;
+    plusWidth: number;
+  } | null;
   spacing: number;
   onUrlChange(canvasUrl: string | null): void;
 }
@@ -52,14 +56,12 @@ const drawPlus = (
   x: number,
   y: number,
   sideLength: number,
+  lineWidth: number,
 ): void => {
-  const widthFactor = 3;
   const halfFactor = 2;
-
   const halfLength = sideLength / halfFactor;
-
   ctx.beginPath();
-  ctx.lineWidth = sideLength / widthFactor;
+  ctx.lineWidth = lineWidth;
   ctx.moveTo(x - halfLength, y);
   ctx.lineTo(x + halfLength, y);
   ctx.moveTo(x, y - halfLength);
@@ -78,7 +80,8 @@ export class Canvas extends Component<Props> {
     if (
       imgsDiffer(prevProps.imgs, this.props.imgs) ||
       prevProps.spacing !== this.props.spacing ||
-      prevProps.margin !== this.props.margin
+      prevProps.margin !== this.props.margin ||
+      prevProps.plus !== this.props.plus
     ) {
       this.updateCanvas();
     }
@@ -103,7 +106,7 @@ export class Canvas extends Component<Props> {
   private updateCanvas(): void {
     // Clear old url
     this.setState({ canvasUrl: null });
-    const { margin, spacing } = this.props;
+    const { margin, spacing, plus } = this.props;
 
     const { positions, fullHeight, fullWidth } = calcPositions(
       this.props.imgs,
@@ -131,15 +134,19 @@ export class Canvas extends Component<Props> {
     positions.forEach(({ img, x, y }, index) => {
       ctx.drawImage(img, x, y);
 
-      // Draw pluses between images
-      const halfFactor = 2;
-      if (index + 1 !== positions.length) {
-        drawPlus(
-          ctx,
-          x + img.width + spacing / halfFactor,
-          fullHeight / halfFactor,
-          spacing / halfFactor,
-        );
+      if (plus) {
+        // Draw pluses between images
+        const { plusLength, plusWidth } = plus;
+        const halfFactor = 2;
+        if (index + 1 !== positions.length) {
+          drawPlus(
+            ctx,
+            x + img.width + spacing / halfFactor,
+            fullHeight / halfFactor,
+            plusLength,
+            plusWidth,
+          );
+        }
       }
     });
 

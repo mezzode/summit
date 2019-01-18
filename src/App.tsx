@@ -44,6 +44,8 @@ const calcDefaultMargin = (img: HTMLImageElement): number => {
   return img.width * defaultMarginFactor;
 };
 
+const inputToNum = (input: string) => parseInt(input, 10) || 0;
+
 interface Props {}
 
 interface State {
@@ -54,6 +56,9 @@ interface State {
   }>;
   marginInput: string;
   marginOpen: boolean;
+  plusLength: string;
+  plusOn: boolean;
+  plusWidth: string;
   remoteUrl: string | null;
   spacingInput: string;
   spacingOpen: boolean;
@@ -65,6 +70,9 @@ export class App extends Component<Props, State> {
     imgs: [],
     marginInput: '',
     marginOpen: false,
+    plusLength: '',
+    plusOn: true,
+    plusWidth: '',
     remoteUrl: null,
     spacingInput: '',
     spacingOpen: false,
@@ -81,9 +89,12 @@ export class App extends Component<Props, State> {
       spacingOpen,
       marginOpen,
       marginInput,
+      plusOn,
+      plusLength,
+      plusWidth,
     } = this.state;
-    const margin = parseInt(this.state.marginInput, 10) || 0;
-    const spacing = parseInt(this.state.spacingInput, 10) || 0;
+    const margin = inputToNum(marginInput);
+    const spacing = inputToNum(spacingInput);
 
     return (
       <div className='main container'>
@@ -94,6 +105,14 @@ export class App extends Component<Props, State> {
           margin={margin}
           spacing={spacing}
           onUrlChange={this.onUrlChange}
+          plus={
+            plusOn
+              ? {
+                  plusLength: inputToNum(plusLength),
+                  plusWidth: inputToNum(plusWidth),
+                }
+              : null
+          }
         />
         {imgs.length > 0 && (
           <DragDropContext onDragEnd={this.onDragEnd}>
@@ -211,7 +230,7 @@ export class App extends Component<Props, State> {
             <input
               type='text'
               id='remoteUrl'
-              onChange={this.changeInput}
+              onChange={this.onInputChange}
               value={remoteUrl}
               placeholder='URL'
             />
@@ -231,7 +250,7 @@ export class App extends Component<Props, State> {
             <NumInput
               label='Spacing (px)'
               id='spacingInput'
-              onChange={this.changeInput}
+              onChange={this.onInputChange}
               value={spacingInput}
             />
           )}
@@ -239,10 +258,31 @@ export class App extends Component<Props, State> {
             <NumInput
               label='Margin (px)'
               id='marginInput'
-              onChange={this.changeInput}
+              onChange={this.onInputChange}
               value={marginInput}
             />
           )}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          <NumInput
+            label='Plus Length (px)'
+            id='plusLength'
+            onChange={this.onInputChange}
+            value={plusLength}
+          />
+          <NumInput
+            label='Plus Width (px)'
+            id='plusWidth'
+            onChange={this.onInputChange}
+            value={plusWidth}
+          />
+          <button>{plusOn ? 'Hide' : 'Show'} Pluses</button>
         </div>
       </div>
     );
@@ -269,20 +309,34 @@ export class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           // All loaded
-          const { imgs, spacingInput, marginInput } = this.state;
           const widestImg = newImgs.reduce((widest, curr) =>
             widest.img.width > curr.img.width ? widest : curr,
           );
-          this.setState({
-            imgs: [...imgs, ...newImgs],
-            marginInput:
-              imgs.length === 0
-                ? calcDefaultMargin(widestImg.img).toString()
-                : marginInput,
-            spacingInput:
-              imgs.length === 0
-                ? calcDefaultSpacing(widestImg.img).toString()
-                : spacingInput,
+
+          this.setState(prevState => {
+            const { imgs } = prevState;
+            let defaults = {};
+            if (imgs.length === 0) {
+              // Set default values
+              const spacing = calcDefaultSpacing(widestImg.img);
+              const spacingInput = spacing.toString();
+              const halfFactor = 2;
+              const widthFactor = 3;
+              const plusLength = spacing / halfFactor;
+              const plusWidth = plusLength / widthFactor;
+              const marginInput = calcDefaultMargin(widestImg.img).toString();
+              defaults = {
+                marginInput,
+                plusLength: plusLength.toString(),
+                plusWidth: plusWidth.toString(),
+                spacingInput,
+              };
+            }
+
+            return {
+              imgs: [...prevState.imgs, ...newImgs],
+              ...defaults,
+            };
           });
         }
       });
@@ -327,13 +381,6 @@ export class App extends Component<Props, State> {
     });
   }
 
-  private changeInput = <T extends keyof State>(
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const newState: { [P in T]: State[P] } = { [e.target.id]: e.target.value };
-    this.setState(newState);
-  }
-
   private clear: MouseEventHandler<HTMLButtonElement> = () => {
     this.setState({
       imgs: [],
@@ -351,6 +398,13 @@ export class App extends Component<Props, State> {
     this.setState({
       imgs,
     });
+  }
+
+  private onInputChange = <T extends keyof State>(
+    e: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const newState: Pick<State, T> = { [e.target.id]: e.target.value };
+    this.setState(newState);
   }
 
   private onUrlChange = (canvasUrl: string | null) => {
