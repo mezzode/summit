@@ -20,24 +20,45 @@ const imgsDiffer = (a: HTMLImageElement[], b: HTMLImageElement[]) => {
 };
 
 const calcPositions = (imgs: HTMLImageElement[], spacing: number) => {
+  const verticalWhitespace = 2; // Top and bottom
   const maxHeight = Math.max(...imgs.map(({ height }) => height));
+  const fullHeight = maxHeight + spacing * verticalWhitespace;
 
   let x = spacing;
 
   // Calc positions (for drawing later since resizing the canvas clears it)
   const positions = [];
   for (const img of imgs) {
-    // TODO: put plus signs in between imgs
-    const verticalWhitespace = 2; // Top and bottom
-    const y = (maxHeight - img.height) / verticalWhitespace;
+    const y = (fullHeight - img.height) / verticalWhitespace;
     positions.push({ img, x, y });
     x += img.width + spacing;
   }
 
   return {
+    fullHeight,
     fullWidth: x,
     positions,
   };
+};
+
+const drawPlus = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sideLength: number,
+): void => {
+  const widthFactor = 3;
+  const halfFactor = 2;
+
+  const halfLength = sideLength / halfFactor;
+
+  ctx.beginPath();
+  ctx.lineWidth = sideLength / widthFactor;
+  ctx.moveTo(x - halfLength, y);
+  ctx.lineTo(x + halfLength, y);
+  ctx.moveTo(x, y - halfLength);
+  ctx.lineTo(x, y + halfLength);
+  ctx.stroke();
 };
 
 export class Canvas extends Component<Props> {
@@ -75,10 +96,11 @@ export class Canvas extends Component<Props> {
   private updateCanvas(): void {
     // Clear old url
     this.setState({ canvasUrl: null });
+    const { spacing } = this.props;
 
-    const { positions, fullWidth } = calcPositions(
+    const { positions, fullHeight, fullWidth } = calcPositions(
       this.props.imgs,
-      this.props.spacing,
+      spacing,
     );
     if (positions.length === 0) {
       return;
@@ -90,8 +112,7 @@ export class Canvas extends Component<Props> {
     }
 
     // Change canvas dims
-    const maxHeight = Math.max(...positions.map(({ img }) => img.height));
-    mainCanvas.height = maxHeight;
+    mainCanvas.height = fullHeight;
     mainCanvas.width = fullWidth;
 
     const ctx = mainCanvas.getContext('2d');
@@ -99,9 +120,20 @@ export class Canvas extends Component<Props> {
       throw new Error('ctx missing');
     }
 
-    positions.forEach(({ img, x, y }) =>
-      ctx.drawImage(img, x, y, img.width, img.height),
-    );
+    positions.forEach(({ img, x, y }, index) => {
+      ctx.drawImage(img, x, y);
+
+      // Draw pluses between images
+      const halfFactor = 2;
+      if (index + 1 !== positions.length) {
+        drawPlus(
+          ctx,
+          x + img.width + spacing / halfFactor,
+          fullHeight / halfFactor,
+          spacing / halfFactor,
+        );
+      }
+    });
 
     this.updateCanvasUrl(mainCanvas);
   }
