@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 
+type Plus = {
+  plusLength: number;
+  plusWidth: number;
+} | null;
+
 interface Props {
   className: string;
   imgs: HTMLImageElement[];
   margin: number;
-  plus: {
-    plusLength: number;
-    plusWidth: number;
-  } | null;
+  plus: Plus;
   spacing: number;
   onUrlChange(canvasUrl: string | null): void;
 }
@@ -22,6 +24,16 @@ const imgsDiffer = (a: HTMLImageElement[], b: HTMLImageElement[]) => {
   }
 
   return !a.every((aImg, i) => aImg === b[i]);
+};
+
+const plusDiffer = (a: Plus, b: Plus) => {
+  if (a === b) {
+    return false;
+  } else if (a === null || b === null) {
+    return true;
+  }
+
+  return a.plusLength !== b.plusLength || a.plusWidth !== b.plusWidth;
 };
 
 const calcPositions = (
@@ -81,7 +93,7 @@ export class Canvas extends Component<Props> {
       imgsDiffer(prevProps.imgs, this.props.imgs) ||
       prevProps.spacing !== this.props.spacing ||
       prevProps.margin !== this.props.margin ||
-      prevProps.plus !== this.props.plus
+      plusDiffer(prevProps.plus, this.props.plus)
     ) {
       this.updateCanvas();
     }

@@ -184,13 +184,13 @@ export class App extends Component<Props, State> {
             )}
             <button
               className={classNames('button', !spacingOpen && 'button-outline')}
-              onClick={this.toggleSpacing}
+              onClick={this.toggle('spacingOpen')}
             >
               Edit Spacing
             </button>
             <button
               className={classNames('button', !marginOpen && 'button-outline')}
-              onClick={this.toggleMargin}
+              onClick={this.toggle('marginOpen')}
             >
               Edit Margin
             </button>
@@ -282,7 +282,12 @@ export class App extends Component<Props, State> {
             onChange={this.onInputChange}
             value={plusWidth}
           />
-          <button>{plusOn ? 'Hide' : 'Show'} Pluses</button>
+          <button
+            className={classNames('button', { 'button-outline': !plusOn })}
+            onClick={this.toggle('plusOn')}
+          >
+            {plusOn ? 'Hide' : 'Show'} Pluses
+          </button>
         </div>
       </div>
     );
@@ -418,21 +423,20 @@ export class App extends Component<Props, State> {
       imgs: delIndex(this.state.imgs, index),
     })
 
-  private toggleMargin = () => {
-    this.setState({
-      marginOpen: !this.state.marginOpen,
+  private toggle = <T extends keyof State>(
+    key: T,
+  ): MouseEventHandler<HTMLButtonElement> => () => {
+    this.setState(prevState => {
+      // Workaround, see https://github.com/Microsoft/TypeScript/issues/13948
+      const newState: Pick<State, T> = { [key]: !this.state[key] };
+
+      return newState;
     });
   }
 
   private toggleRemote = () => {
     this.setState({
       remoteUrl: this.state.remoteUrl === null ? '' : null,
-    });
-  }
-
-  private toggleSpacing = () => {
-    this.setState({
-      spacingOpen: !this.state.spacingOpen,
     });
   }
 }
