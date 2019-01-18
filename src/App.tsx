@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import 'milligram';
 import 'normalize.css';
 import React, { ChangeEventHandler, Component, MouseEventHandler } from 'react';
@@ -162,13 +163,13 @@ export class App extends Component<Props, State> {
               <a className='button disabled-link-btn'>Save</a>
             )}
             <button
-              className={`button${!spacingOpen ? ' button-outline' : ''}`}
+              className={classNames('button', !spacingOpen && 'button-outline')}
               onClick={this.toggleSpacing}
             >
               Edit Spacing
             </button>
             <button
-              className={`button${!marginOpen ? ' button-outline' : ''}`}
+              className={classNames('button', !marginOpen && 'button-outline')}
               onClick={this.toggleMargin}
             >
               Edit Margin
