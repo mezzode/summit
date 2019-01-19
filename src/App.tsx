@@ -24,6 +24,7 @@ interface State extends Settings {
     name: string;
   }>;
   marginOpen: boolean;
+  plusOpen: boolean;
   remoteUrl: string | null;
   spacingOpen: boolean;
 }
@@ -91,6 +92,7 @@ export class App extends Component<Props, State> {
     marginOpen: false,
     plusLength: '',
     plusOn: true,
+    plusOpen: false,
     plusWidth: '',
     remoteUrl: null,
     spacingInput: '',
@@ -109,6 +111,7 @@ export class App extends Component<Props, State> {
       marginOpen,
       marginInput,
       plusOn,
+      plusOpen,
       plusLength,
       plusWidth,
     } = this.state;
@@ -187,59 +190,81 @@ export class App extends Component<Props, State> {
               justifyContent: 'center',
             }}
           >
-            <button
-              className='button button-outline'
-              onClick={this.clear}
-              disabled={imgs.length === 0}
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}
             >
-              Clear
-            </button>
-            {canvasUrl ? (
-              <a className='button' href={canvasUrl} download='header.png'>
-                Save
-              </a>
-            ) : (
-              <a className='button disabled-link-btn'>Save</a>
-            )}
-            <button
-              className={classNames('button', !spacingOpen && 'button-outline')}
-              onClick={this.toggle('spacingOpen')}
+              <button
+                className='button button-outline'
+                onClick={this.clear}
+                disabled={imgs.length === 0}
+              >
+                Clear
+              </button>
+              {canvasUrl ? (
+                <a className='button' href={canvasUrl} download='header.png'>
+                  Save
+                </a>
+              ) : (
+                <a className='button disabled-link-btn'>Save</a>
+              )}
+              <FileInput
+                id='fileInput'
+                accept='image/*'
+                className='button button-outline'
+                multiple
+                forwardedRef={this.fileInput}
+                onChange={this.addLocal}
+              >
+                Add local images
+              </FileInput>
+              <button
+                className={`button${
+                  remoteUrl === null ? ' button-outline' : ''
+                }`}
+                onClick={this.toggleRemote}
+              >
+                Add from URL
+              </button>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+              }}
             >
-              Edit Spacing
-            </button>
-            <button
-              className={classNames('button', !marginOpen && 'button-outline')}
-              onClick={this.toggle('marginOpen')}
-            >
-              Edit Margin
-            </button>
-            <button className='button button-outline' onClick={this.reset}>
-              Reset
-            </button>
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
-            <FileInput
-              id='fileInput'
-              accept='image/*'
-              className='button button-outline'
-              multiple
-              forwardedRef={this.fileInput}
-              onChange={this.addLocal}
-            >
-              Add local images
-            </FileInput>
-            <button
-              className={`button${remoteUrl === null ? ' button-outline' : ''}`}
-              onClick={this.toggleRemote}
-            >
-              Add from URL
-            </button>
+              <button
+                className={classNames(
+                  'button',
+                  !spacingOpen && 'button-outline',
+                )}
+                onClick={this.toggle('spacingOpen')}
+              >
+                Edit Spacing
+              </button>
+              <button
+                className={classNames(
+                  'button',
+                  !marginOpen && 'button-outline',
+                )}
+                onClick={this.toggle('marginOpen')}
+              >
+                Edit Margin
+              </button>
+              <button
+                className='button button-outline'
+                onClick={this.toggle('plusOpen')}
+              >
+                Edit Pluses
+              </button>
+              <button className='button button-outline' onClick={this.reset}>
+                Reset
+              </button>
+            </div>
           </div>
         </div>
         {remoteUrl !== null && (
@@ -285,34 +310,36 @@ export class App extends Component<Props, State> {
             />
           )}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}
-        >
-          <NumInput
-            label='Plus Length (px)'
-            id='plusLength'
-            onChange={this.onInputChange}
-            value={plusLength}
-            disabled={!plusOn}
-          />
-          <NumInput
-            label='Plus Width (px)'
-            id='plusWidth'
-            onChange={this.onInputChange}
-            value={plusWidth}
-            disabled={!plusOn}
-          />
-          <button
-            className={classNames('button', { 'button-outline': !plusOn })}
-            onClick={this.toggle('plusOn')}
+        {plusOpen && (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
           >
-            {plusOn ? 'Hide' : 'Show'} Pluses
-          </button>
-        </div>
+            <NumInput
+              label='Plus Length (px)'
+              id='plusLength'
+              onChange={this.onInputChange}
+              value={plusLength}
+              disabled={!plusOn}
+            />
+            <NumInput
+              label='Plus Width (px)'
+              id='plusWidth'
+              onChange={this.onInputChange}
+              value={plusWidth}
+              disabled={!plusOn}
+            />
+            <button
+              className={classNames('button', { 'button-outline': !plusOn })}
+              onClick={this.toggle('plusOn')}
+            >
+              {plusOn ? 'Hide' : 'Show'} Pluses
+            </button>
+          </div>
+        )}
       </div>
     );
   }
