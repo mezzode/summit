@@ -14,6 +14,28 @@ import { Canvas } from './Canvas';
 import { FileInput } from './FileInput';
 import { NumInput } from './NumInput';
 
+interface Props {}
+
+interface State extends Settings {
+  canvasUrl: string | null;
+  imgs: Array<{
+    id: string;
+    img: HTMLImageElement;
+    name: string;
+  }>;
+  marginOpen: boolean;
+  remoteUrl: string | null;
+  spacingOpen: boolean;
+}
+
+interface Settings {
+  marginInput: string;
+  plusLength: string;
+  plusOn: boolean;
+  plusWidth: string;
+  spacingInput: string;
+}
+
 const reorder = <T extends {}>(
   arr: T[],
   srcIndex: number,
@@ -33,38 +55,33 @@ const delIndex = <T extends {}>(arr: T[], index: number): T[] => {
   return arrCopy;
 };
 
-const calcDefaultSpacing = (img: HTMLImageElement): number => {
-  const defaultSpacingFactor = 0.2;
-
-  return img.width * defaultSpacingFactor;
-};
-
-const calcDefaultMargin = (img: HTMLImageElement): number => {
-  const defaultMarginFactor = 0.1;
-
-  return img.width * defaultMarginFactor;
-};
-
 const inputToNum = (input: string) => parseInt(input, 10) || 0;
 
-interface Props {}
+const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
+  const marginRatio = 10;
+  const spacingRatio = 5;
+  const plusLengthRatio = 2;
+  const widthFactor = 3;
 
-interface State {
-  canvasUrl: string | null;
-  imgs: Array<{
-    id: string;
-    img: HTMLImageElement;
-    name: string;
-  }>;
-  marginInput: string;
-  marginOpen: boolean;
-  plusLength: string;
-  plusOn: boolean;
-  plusWidth: string;
-  remoteUrl: string | null;
-  spacingInput: string;
-  spacingOpen: boolean;
-}
+  const widestImg = imgs.reduce((widest, curr) =>
+    widest.width > curr.width ? widest : curr,
+  );
+
+  const margin = widestImg.width / marginRatio;
+  const spacing = widestImg.width / spacingRatio;
+  const plusLength = spacing / plusLengthRatio;
+  const plusWidth = plusLength / widthFactor;
+
+  const defaults = {
+    marginInput: margin.toString(),
+    plusLength: plusLength.toString(),
+    plusOn: true,
+    plusWidth: plusWidth.toString(),
+    spacingInput: spacing.toString(),
+  };
+
+  return defaults;
+};
 
 export class App extends Component<Props, State> {
   public state: State = {
@@ -123,7 +140,7 @@ export class App extends Component<Props, State> {
                 <div ref={provided.innerRef}>
                   {imgs.map((item, index) => (
                     <Draggable
-                      key={item.img.id}
+                      key={item.id}
                       draggableId={item.img.src}
                       index={index}
                     >
@@ -195,6 +212,9 @@ export class App extends Component<Props, State> {
               onClick={this.toggle('marginOpen')}
             >
               Edit Margin
+            </button>
+            <button className='button button-outline' onClick={this.reset}>
+              Reset
             </button>
           </div>
           <div
@@ -316,28 +336,12 @@ export class App extends Component<Props, State> {
         loaded += 1;
         if (loaded === toLoad) {
           // All loaded
-          const widestImg = newImgs.reduce((widest, curr) =>
-            widest.img.width > curr.img.width ? widest : curr,
-          );
-
           this.setState(prevState => {
             const { imgs } = prevState;
             let defaults = {};
             if (imgs.length === 0) {
               // Set default values
-              const spacing = calcDefaultSpacing(widestImg.img);
-              const spacingInput = spacing.toString();
-              const halfFactor = 2;
-              const widthFactor = 3;
-              const plusLength = spacing / halfFactor;
-              const plusWidth = plusLength / widthFactor;
-              const marginInput = calcDefaultMargin(widestImg.img).toString();
-              defaults = {
-                marginInput,
-                plusLength: plusLength.toString(),
-                plusWidth: plusWidth.toString(),
-                spacingInput,
-              };
+              defaults = calcDefaults(newImgs.map(i => i.img));
             }
 
             return {
@@ -360,8 +364,7 @@ export class App extends Component<Props, State> {
   }
 
   private addRemote: MouseEventHandler<HTMLButtonElement> = e => {
-    // Unnecessary? e.preventDefault();
-    const { imgs, remoteUrl, spacingInput, marginInput } = this.state;
+    const { remoteUrl } = this.state;
     if (remoteUrl === null) {
       throw new Error();
     }
@@ -372,20 +375,22 @@ export class App extends Component<Props, State> {
 
     img.addEventListener('load', () => {
       const [name] = remoteUrl.split('/').slice(-1);
-      this.setState({
-        imgs: [
-          ...imgs,
-          {
-            id: uuidv4(),
-            img,
-            name,
-          },
-        ],
-        marginInput:
-          imgs.length === 0 ? calcDefaultMargin(img).toString() : marginInput,
-        remoteUrl: '',
-        spacingInput:
-          imgs.length === 0 ? calcDefaultSpacing(img).toString() : spacingInput,
+      this.setState(prevState => {
+        const { imgs } = prevState;
+        const defaults = imgs.length === 0 ? calcDefaults([img]) : {};
+
+        return {
+          imgs: [
+            ...imgs,
+            {
+              id: uuidv4(),
+              img,
+              name,
+            },
+          ],
+          remoteUrl: '',
+          ...defaults,
+        };
       });
     });
   }
@@ -426,6 +431,10 @@ export class App extends Component<Props, State> {
     this.setState({
       imgs: delIndex(this.state.imgs, index),
     })
+
+  private reset: MouseEventHandler<HTMLButtonElement> = () => {
+    this.setState(prevState => calcDefaults(prevState.imgs.map(i => i.img)));
+  }
 
   private toggle = <T extends keyof State>(
     key: T,
