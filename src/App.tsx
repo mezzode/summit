@@ -18,7 +18,6 @@ interface Props {}
 
 interface State extends Settings {
   canvasUrl: string | null;
-  endWithEquals: boolean;
   imgs: Array<{
     id: string;
     img: HTMLImageElement;
@@ -30,6 +29,7 @@ interface State extends Settings {
 }
 
 interface Settings {
+  endWithEquals: boolean;
   marginInput: string;
   plusLength: string;
   plusOn: boolean;
@@ -62,7 +62,7 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
   const marginRatio = 10;
   const spacingRatio = 5;
   const plusLengthRatio = 2;
-  const widthFactor = 3;
+  const widthRatio = 3;
 
   const widestImg = imgs.reduce((widest, curr) =>
     widest.width > curr.width ? widest : curr,
@@ -71,9 +71,10 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
   const margin = widestImg.width / marginRatio;
   const spacing = widestImg.width / spacingRatio;
   const plusLength = spacing / plusLengthRatio;
-  const plusWidth = plusLength / widthFactor;
+  const plusWidth = plusLength / widthRatio;
 
   const defaults = {
+    endWithEquals: false,
     marginInput: margin.toString(),
     plusLength: plusLength.toString(),
     plusOn: true,
@@ -119,6 +120,158 @@ export class App extends Component<Props, State> {
     const spacing = inputToNum(spacingInput);
     const isEmpty = imgs.length === 0;
 
+    const imageList = (
+      <DragDropContext onDragEnd={this.onDragEnd}>
+        <Droppable droppableId='droppable'>
+          {(provided, snapshot) => (
+            <div ref={provided.innerRef}>
+              {imgs.map((item, index) => (
+                <Draggable
+                  key={item.id}
+                  draggableId={item.img.src}
+                  index={index}
+                >
+                  {(providedDraggable, snapshotDraggable) => (
+                    <div
+                      ref={providedDraggable.innerRef}
+                      {...providedDraggable.draggableProps}
+                      {...providedDraggable.dragHandleProps}
+                      style={{
+                        ...providedDraggable.draggableProps.style,
+                        // Need inline styles to avoid being overwritten
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <span>{item.name}</span>
+                      <button
+                        onClick={this.removeImg(index)}
+                        className='button button-clear'
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    );
+
+    const mainControls = (
+      <div className='control-container'>
+        <div className='control-container'>
+          <FileInput
+            id='fileInput'
+            accept='image/*'
+            className='button button-outline'
+            multiple
+            forwardedRef={this.fileInput}
+            onChange={this.addLocal}
+          >
+            Add local images
+          </FileInput>
+          <button
+            className={`button${remoteUrl === null ? ' button-outline' : ''}`}
+            onClick={this.toggleRemote}
+          >
+            Add from URL
+          </button>
+        </div>
+        <div className='control-container'>
+          <button
+            className='button button-outline'
+            onClick={this.clear}
+            disabled={isEmpty}
+          >
+            Clear
+          </button>
+          {canvasUrl ? (
+            <a className='button' href={canvasUrl} download='header.png'>
+              Save
+            </a>
+          ) : (
+            <a className='button disabled-link-btn'>Save</a>
+          )}
+        </div>
+      </div>
+    );
+
+    const secondaryControls = (
+      <div className='control-container'>
+        <button
+          className={classNames('button', !spacingsOpen && 'button-clear')}
+          onClick={this.toggle('spacingsOpen')}
+          disabled={isEmpty}
+        >
+          Edit Spacings
+        </button>
+        <button
+          className={classNames('button', !plusOpen && 'button-clear')}
+          onClick={this.toggle('plusOpen')}
+          disabled={isEmpty}
+        >
+          Edit Pluses
+        </button>
+        <button
+          className='button button-clear'
+          onClick={this.reset}
+          disabled={isEmpty}
+        >
+          Use Default Settings
+        </button>
+      </div>
+    );
+
+    const spacingControls = (
+      <div className='control-container'>
+        <NumInput
+          label='Spacing (px)'
+          id='spacingInput'
+          onChange={this.onInputChange}
+          value={spacingInput}
+        />
+        <NumInput
+          label='Margin (px)'
+          id='marginInput'
+          onChange={this.onInputChange}
+          value={marginInput}
+        />
+      </div>
+    );
+
+    const plusControls = (
+      <div className='control-container'>
+        <button className='button button-clear' onClick={this.toggle('plusOn')}>
+          {plusOn ? 'Hide' : 'Show'} Pluses
+        </button>
+        <button
+          className='button button-clear'
+          onClick={this.toggle('endWithEquals')}
+        >
+          {endWithEquals ? 'Hide' : 'Show'} Equals
+        </button>
+        <NumInput
+          label='Plus Length (px)'
+          id='plusLength'
+          onChange={this.onInputChange}
+          value={plusLength}
+          disabled={!plusOn}
+        />
+        <NumInput
+          label='Plus Width (px)'
+          id='plusWidth'
+          onChange={this.onInputChange}
+          value={plusWidth}
+          disabled={!plusOn}
+        />
+      </div>
+    );
+
     return (
       <div className='main container'>
         <h1>Article Header Generator</h1>
@@ -138,109 +291,10 @@ export class App extends Component<Props, State> {
               : null
           }
         />
-        {imgs.length > 0 && (
-          <DragDropContext onDragEnd={this.onDragEnd}>
-            <Droppable droppableId='droppable'>
-              {(provided, snapshot) => (
-                <div ref={provided.innerRef}>
-                  {imgs.map((item, index) => (
-                    <Draggable
-                      key={item.id}
-                      draggableId={item.img.src}
-                      index={index}
-                    >
-                      {(providedDraggable, snapshotDraggable) => (
-                        <div
-                          ref={providedDraggable.innerRef}
-                          {...providedDraggable.draggableProps}
-                          {...providedDraggable.dragHandleProps}
-                          style={{
-                            ...providedDraggable.draggableProps.style,
-                            // Need inline styles to avoid being overwritten
-                            alignItems: 'center',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <span>{item.name}</span>
-                          <button
-                            onClick={this.removeImg(index)}
-                            className='button button-clear'
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        )}
+        {imgs.length > 0 && imageList}
         <div>
-          <div className='control-container'>
-            <div className='control-container'>
-              <FileInput
-                id='fileInput'
-                accept='image/*'
-                className='button button-outline'
-                multiple
-                forwardedRef={this.fileInput}
-                onChange={this.addLocal}
-              >
-                Add local images
-              </FileInput>
-              <button
-                className={`button${
-                  remoteUrl === null ? ' button-outline' : ''
-                }`}
-                onClick={this.toggleRemote}
-              >
-                Add from URL
-              </button>
-            </div>
-            <div className='control-container'>
-              <button
-                className='button button-outline'
-                onClick={this.clear}
-                disabled={isEmpty}
-              >
-                Clear
-              </button>
-              {canvasUrl ? (
-                <a className='button' href={canvasUrl} download='header.png'>
-                  Save
-                </a>
-              ) : (
-                <a className='button disabled-link-btn'>Save</a>
-              )}
-            </div>
-          </div>
-          <div className='control-container'>
-            <button
-              className={classNames('button', !spacingsOpen && 'button-clear')}
-              onClick={this.toggle('spacingsOpen')}
-              disabled={isEmpty}
-            >
-              Edit Spacings
-            </button>
-            <button
-              className={classNames('button', !plusOpen && 'button-clear')}
-              onClick={this.toggle('plusOpen')}
-              disabled={isEmpty}
-            >
-              Edit Pluses
-            </button>
-            <button
-              className='button button-clear'
-              onClick={this.reset}
-              disabled={isEmpty}
-            >
-              Use Default Settings
-            </button>
-          </div>
+          {mainControls}
+          {secondaryControls}
         </div>
         {remoteUrl !== null && (
           <div className='input-container'>
@@ -256,52 +310,8 @@ export class App extends Component<Props, State> {
             </button>
           </div>
         )}
-        {spacingsOpen && (
-          <div className='control-container'>
-            <NumInput
-              label='Spacing (px)'
-              id='spacingInput'
-              onChange={this.onInputChange}
-              value={spacingInput}
-            />
-            <NumInput
-              label='Margin (px)'
-              id='marginInput'
-              onChange={this.onInputChange}
-              value={marginInput}
-            />
-          </div>
-        )}
-        {plusOpen && (
-          <div className='control-container'>
-            <button
-              className='button button-clear'
-              onClick={this.toggle('plusOn')}
-            >
-              {plusOn ? 'Hide' : 'Show'} Pluses
-            </button>
-            <button
-              className='button button-clear'
-              onClick={this.toggle('endWithEquals')}
-            >
-              {endWithEquals ? 'Hide' : 'Show'} Equals
-            </button>
-            <NumInput
-              label='Plus Length (px)'
-              id='plusLength'
-              onChange={this.onInputChange}
-              value={plusLength}
-              disabled={!plusOn}
-            />
-            <NumInput
-              label='Plus Width (px)'
-              id='plusWidth'
-              onChange={this.onInputChange}
-              value={plusWidth}
-              disabled={!plusOn}
-            />
-          </div>
-        )}
+        {spacingsOpen && spacingControls}
+        {plusOpen && plusControls}
       </div>
     );
   }

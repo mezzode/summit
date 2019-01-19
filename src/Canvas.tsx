@@ -1,11 +1,5 @@
 import React, { Component } from 'react';
 
-type Plus = {
-  endWithEquals: boolean;
-  plusLength: number;
-  plusWidth: number;
-} | null;
-
 interface Props {
   className: string;
   imgs: HTMLImageElement[];
@@ -18,6 +12,12 @@ interface Props {
 interface State {
   canvasUrl: string | null;
 }
+
+type Plus = {
+  endWithEquals: boolean;
+  plusLength: number;
+  plusWidth: number;
+} | null;
 
 const imgsDiffer = (a: HTMLImageElement[], b: HTMLImageElement[]) => {
   if (a.length !== b.length) {
@@ -75,14 +75,13 @@ const drawPlus = (
   sideLength: number,
   lineWidth: number,
 ): void => {
-  const halfFactor = 2;
-  const halfLength = sideLength / halfFactor;
+  const half = sideLength / 2;
   ctx.beginPath();
   ctx.lineWidth = lineWidth;
-  ctx.moveTo(x - halfLength, y);
-  ctx.lineTo(x + halfLength, y);
-  ctx.moveTo(x, y - halfLength);
-  ctx.lineTo(x, y + halfLength);
+  ctx.moveTo(x - half, y);
+  ctx.lineTo(x + half, y);
+  ctx.moveTo(x, y - half);
+  ctx.lineTo(x, y + half);
   ctx.stroke();
 };
 
@@ -93,16 +92,14 @@ const drawEquals = (
   sideLength: number,
   lineWidth: number,
 ): void => {
-  const quarterFactor = 4;
-  const halfFactor = 2;
-  const quarterLength = sideLength / quarterFactor;
-  const halfLength = sideLength / halfFactor;
+  const quarter = sideLength / 4;
+  const half = sideLength / 2;
   ctx.beginPath();
   ctx.lineWidth = lineWidth;
-  ctx.moveTo(x - halfLength, y - quarterLength);
-  ctx.lineTo(x + halfLength, y - quarterLength);
-  ctx.moveTo(x - halfLength, y + quarterLength);
-  ctx.lineTo(x + halfLength, y + quarterLength);
+  ctx.moveTo(x - half, y - quarter);
+  ctx.lineTo(x + half, y - quarter);
+  ctx.moveTo(x - half, y + quarter);
+  ctx.lineTo(x + half, y + quarter);
   ctx.stroke();
 };
 
