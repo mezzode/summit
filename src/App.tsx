@@ -24,10 +24,9 @@ interface State extends Settings {
     img: HTMLImageElement;
     name: string;
   }>;
-  marginOpen: boolean;
   plusOpen: boolean;
   remoteUrl: string | null;
-  spacingOpen: boolean;
+  spacingsOpen: boolean;
 }
 
 interface Settings {
@@ -91,14 +90,13 @@ export class App extends Component<Props, State> {
     endWithEquals: false,
     imgs: [],
     marginInput: '',
-    marginOpen: false,
     plusLength: '',
     plusOn: true,
     plusOpen: false,
     plusWidth: '',
     remoteUrl: null,
     spacingInput: '',
-    spacingOpen: false,
+    spacingsOpen: false,
   };
 
   private fileInput = React.createRef<HTMLInputElement>();
@@ -110,8 +108,7 @@ export class App extends Component<Props, State> {
       canvasUrl,
       endWithEquals,
       imgs,
-      spacingOpen,
-      marginOpen,
+      spacingsOpen,
       marginInput,
       plusOn,
       plusOpen,
@@ -182,76 +179,67 @@ export class App extends Component<Props, State> {
             </Droppable>
           </DragDropContext>
         )}
-        <div className='control-container'>
+        <div>
           <div className='control-container'>
             <div className='control-container'>
-              <div className='control-container'>
-                <FileInput
-                  id='fileInput'
-                  accept='image/*'
-                  className='button button-outline'
-                  multiple
-                  forwardedRef={this.fileInput}
-                  onChange={this.addLocal}
-                >
-                  Add local images
-                </FileInput>
-                <button
-                  className={`button${
-                    remoteUrl === null ? ' button-outline' : ''
-                  }`}
-                  onClick={this.toggleRemote}
-                >
-                  Add from URL
-                </button>
-              </div>
-              <div className='control-container'>
-                <button
-                  className='button button-outline'
-                  onClick={this.clear}
-                  disabled={isEmpty}
-                >
-                  Clear
-                </button>
-                {canvasUrl ? (
-                  <a className='button' href={canvasUrl} download='header.png'>
-                    Save
-                  </a>
-                ) : (
-                  <a className='button disabled-link-btn'>Save</a>
-                )}
-              </div>
+              <FileInput
+                id='fileInput'
+                accept='image/*'
+                className='button button-outline'
+                multiple
+                forwardedRef={this.fileInput}
+                onChange={this.addLocal}
+              >
+                Add local images
+              </FileInput>
+              <button
+                className={`button${
+                  remoteUrl === null ? ' button-outline' : ''
+                }`}
+                onClick={this.toggleRemote}
+              >
+                Add from URL
+              </button>
             </div>
             <div className='control-container'>
               <button
-                className={classNames('button', !spacingOpen && 'button-clear')}
-                onClick={this.toggle('spacingOpen')}
+                className='button button-outline'
+                onClick={this.clear}
                 disabled={isEmpty}
               >
-                Edit Spacing
+                Clear
               </button>
-              <button
-                className={classNames('button', !marginOpen && 'button-clear')}
-                onClick={this.toggle('marginOpen')}
-                disabled={isEmpty}
-              >
-                Edit Margin
-              </button>
-              <button
-                className={classNames('button', !plusOpen && 'button-clear')}
-                onClick={this.toggle('plusOpen')}
-                disabled={isEmpty}
-              >
-                Edit Pluses
-              </button>
-              <button
-                className='button button-clear'
-                onClick={this.reset}
-                disabled={isEmpty}
-              >
-                Use Default Settings
-              </button>
+              {canvasUrl ? (
+                <a className='button' href={canvasUrl} download='header.png'>
+                  Save
+                </a>
+              ) : (
+                <a className='button disabled-link-btn'>Save</a>
+              )}
             </div>
+          </div>
+          <div className='control-container'>
+            <button
+              className={classNames('button', !spacingsOpen && 'button-clear')}
+              onClick={this.toggle('spacingsOpen')}
+              disabled={isEmpty}
+            >
+              Edit Spacings
+            </button>
+            <button
+              className={classNames('button', !plusOpen && 'button-clear')}
+              onClick={this.toggle('plusOpen')}
+              disabled={isEmpty}
+            >
+              Edit Pluses
+            </button>
+            <button
+              className='button button-clear'
+              onClick={this.reset}
+              disabled={isEmpty}
+            >
+              Use Default Settings
+            </button>
           </div>
         </div>
         {remoteUrl !== null && (
@@ -268,24 +256,22 @@ export class App extends Component<Props, State> {
             </button>
           </div>
         )}
-        <div className='control-container'>
-          {spacingOpen && (
+        {spacingsOpen && (
+          <div className='control-container'>
             <NumInput
               label='Spacing (px)'
               id='spacingInput'
               onChange={this.onInputChange}
               value={spacingInput}
             />
-          )}
-          {marginOpen && (
             <NumInput
               label='Margin (px)'
               id='marginInput'
               onChange={this.onInputChange}
               value={marginInput}
             />
-          )}
-        </div>
+          </div>
+        )}
         {plusOpen && (
           <div className='control-container'>
             <button
@@ -298,7 +284,7 @@ export class App extends Component<Props, State> {
               className='button button-clear'
               onClick={this.toggle('endWithEquals')}
             >
-              Equals {endWithEquals ? 'Off' : 'On'}
+              {endWithEquals ? 'Hide' : 'Show'} Equals
             </button>
             <NumInput
               label='Plus Length (px)'
