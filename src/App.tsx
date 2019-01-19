@@ -8,6 +8,7 @@ import {
   Droppable,
   OnDragEndResponder,
 } from 'react-beautiful-dnd';
+import uuidv4 from 'uuid';
 import './App.css';
 import { Canvas } from './Canvas';
 import { FileInput } from './FileInput';
@@ -51,6 +52,7 @@ interface Props {}
 interface State {
   canvasUrl: string | null;
   imgs: Array<{
+    id: string;
     img: HTMLImageElement;
     name: string;
   }>;
@@ -121,7 +123,7 @@ export class App extends Component<Props, State> {
                 <div ref={provided.innerRef}>
                   {imgs.map((item, index) => (
                     <Draggable
-                      key={item.img.src}
+                      key={item.img.id}
                       draggableId={item.img.src}
                       index={index}
                     >
@@ -347,6 +349,7 @@ export class App extends Component<Props, State> {
       });
 
       return {
+        id: url,
         img,
         name: f.name,
       };
@@ -373,6 +376,7 @@ export class App extends Component<Props, State> {
         imgs: [
           ...imgs,
           {
+            id: uuidv4(),
             img,
             name,
           },
