@@ -81,6 +81,9 @@ const drawPlus = (
   ctx.stroke();
 };
 
+/**
+ * Custom canvas wrapper for adapting declarative props to imperative Canvas API
+ */
 export class Canvas extends Component<Props> {
   public state: State = {
     canvasUrl: null,
@@ -116,7 +119,7 @@ export class Canvas extends Component<Props> {
   }
 
   private updateCanvas(): void {
-    // Clear old url
+    // Clear old url to prevent file being inconsistent with displayed canvas.
     this.setState({ canvasUrl: null });
     const { margin, spacing, plus } = this.props;
 

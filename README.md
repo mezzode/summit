@@ -1,7 +1,6 @@
 # Article Header Generator
 
-Wanted an easy way to generate these type of headers and thought it would be a
-good way to get familiar with the Canvas API and React Refs.
+A PWA for creating quick and dirty article header images, built with React, TypeScript, and the HTML Canvas API.
 
 ---
 

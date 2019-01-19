@@ -409,11 +409,9 @@ export class App extends Component<Props, State> {
       return;
     }
 
-    const imgs = reorder(this.state.imgs, source.index, destination.index);
-
-    this.setState({
-      imgs,
-    });
+    this.setState(prevState => ({
+      imgs: reorder(prevState.imgs, source.index, destination.index),
+    }));
   }
 
   private onInputChange = <T extends keyof State>(
@@ -430,9 +428,9 @@ export class App extends Component<Props, State> {
   private removeImg = (
     index: number,
   ): MouseEventHandler<HTMLButtonElement> => () =>
-    this.setState({
-      imgs: delIndex(this.state.imgs, index),
-    })
+    this.setState(prevState => ({
+      imgs: delIndex(prevState.imgs, index),
+    }))
 
   private reset: MouseEventHandler<HTMLButtonElement> = () => {
     this.setState(prevState => calcDefaults(prevState.imgs.map(i => i.img)));
@@ -443,15 +441,15 @@ export class App extends Component<Props, State> {
   ): MouseEventHandler<HTMLButtonElement> => () => {
     this.setState(prevState => {
       // Workaround, see https://github.com/Microsoft/TypeScript/issues/13948
-      const newState: Pick<State, T> = { [key]: !this.state[key] };
+      const newState: Pick<State, T> = { [key]: !prevState[key] };
 
       return newState;
     });
   }
 
   private toggleRemote = () => {
-    this.setState({
-      remoteUrl: this.state.remoteUrl === null ? '' : null,
-    });
+    this.setState(prevState => ({
+      remoteUrl: prevState.remoteUrl === null ? '' : null,
+    }));
   }
 }
