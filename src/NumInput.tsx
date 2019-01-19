@@ -1,10 +1,9 @@
-import React, { ChangeEventHandler, SFC } from 'react';
+import React, { SFC } from 'react';
 
-interface Props {
+interface Props extends React.HTMLProps<HTMLInputElement> {
+  // Require id so label can be linked
   id: string;
   label: string;
-  onChange: ChangeEventHandler<HTMLInputElement>;
-  value: string;
 }
 
 // tslint:disable-next-line:variable-name

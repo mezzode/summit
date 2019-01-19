@@ -9,6 +9,7 @@ export interface Props
   id: string;
 }
 
+// Using a PureComponent as SFCs do not support refs
 export class FileInput extends React.PureComponent<Props> {
   public render() {
     const {

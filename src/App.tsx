@@ -297,12 +297,14 @@ export class App extends Component<Props, State> {
             id='plusLength'
             onChange={this.onInputChange}
             value={plusLength}
+            disabled={!plusOn}
           />
           <NumInput
             label='Plus Width (px)'
             id='plusWidth'
             onChange={this.onInputChange}
             value={plusWidth}
+            disabled={!plusOn}
           />
           <button
             className={classNames('button', { 'button-outline': !plusOn })}
