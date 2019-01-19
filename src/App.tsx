@@ -176,27 +176,9 @@ export class App extends Component<Props, State> {
             </Droppable>
           </DragDropContext>
         )}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
+        <div className='control-container'>
+          <div className='control-container'>
+            <div className='control-container'>
               <button
                 className='button button-outline'
                 onClick={this.clear}
@@ -230,13 +212,7 @@ export class App extends Component<Props, State> {
                 Add from URL
               </button>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              }}
-            >
+            <div className='control-container'>
               <button
                 className={classNames(
                   'button',
@@ -262,7 +238,7 @@ export class App extends Component<Props, State> {
                 Edit Pluses
               </button>
               <button className='button button-outline' onClick={this.reset}>
-                Reset
+                Default Settings
               </button>
             </div>
           </div>
@@ -286,13 +262,7 @@ export class App extends Component<Props, State> {
             </button>
           </div>
         )}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}
-        >
+        <div className='control-container'>
           {spacingOpen && (
             <NumInput
               label='Spacing (px)'
@@ -311,13 +281,7 @@ export class App extends Component<Props, State> {
           )}
         </div>
         {plusOpen && (
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
+          <div className='control-container'>
             <NumInput
               label='Plus Length (px)'
               id='plusLength'

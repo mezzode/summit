@@ -13,6 +13,12 @@
   width: 100%;
 }
 
+.control-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* .disabled-link-btn exists to apply .button[disabled] styles to an <a> */
 
 .disabled-link-btn {
