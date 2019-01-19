@@ -19,6 +19,11 @@
   justify-content: center;
 }
 
+.input-container {
+  align-items: center;
+  display: flex;
+}
+
 /* .disabled-link-btn exists to apply .button[disabled] styles to an <a> */
 
 .disabled-link-btn {

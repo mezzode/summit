@@ -117,6 +117,7 @@ export class App extends Component<Props, State> {
     } = this.state;
     const margin = inputToNum(marginInput);
     const spacing = inputToNum(spacingInput);
+    const isEmpty = imgs.length === 0;
 
     return (
       <div className='main container'>
@@ -154,6 +155,7 @@ export class App extends Component<Props, State> {
                           {...providedDraggable.dragHandleProps}
                           style={{
                             ...providedDraggable.draggableProps.style,
+                            // Need inline styles to avoid being overwritten
                             alignItems: 'center',
                             display: 'flex',
                             justifyContent: 'space-between',
@@ -179,77 +181,77 @@ export class App extends Component<Props, State> {
         <div className='control-container'>
           <div className='control-container'>
             <div className='control-container'>
-              <button
-                className='button button-outline'
-                onClick={this.clear}
-                disabled={imgs.length === 0}
-              >
-                Clear
-              </button>
-              {canvasUrl ? (
-                <a className='button' href={canvasUrl} download='header.png'>
-                  Save
-                </a>
-              ) : (
-                <a className='button disabled-link-btn'>Save</a>
-              )}
-              <FileInput
-                id='fileInput'
-                accept='image/*'
-                className='button button-outline'
-                multiple
-                forwardedRef={this.fileInput}
-                onChange={this.addLocal}
-              >
-                Add local images
-              </FileInput>
-              <button
-                className={`button${
-                  remoteUrl === null ? ' button-outline' : ''
-                }`}
-                onClick={this.toggleRemote}
-              >
-                Add from URL
-              </button>
+              <div className='control-container'>
+                <FileInput
+                  id='fileInput'
+                  accept='image/*'
+                  className='button button-outline'
+                  multiple
+                  forwardedRef={this.fileInput}
+                  onChange={this.addLocal}
+                >
+                  Add local images
+                </FileInput>
+                <button
+                  className={`button${
+                    remoteUrl === null ? ' button-outline' : ''
+                  }`}
+                  onClick={this.toggleRemote}
+                >
+                  Add from URL
+                </button>
+              </div>
+              <div className='control-container'>
+                <button
+                  className='button button-outline'
+                  onClick={this.clear}
+                  disabled={isEmpty}
+                >
+                  Clear
+                </button>
+                {canvasUrl ? (
+                  <a className='button' href={canvasUrl} download='header.png'>
+                    Save
+                  </a>
+                ) : (
+                  <a className='button disabled-link-btn'>Save</a>
+                )}
+              </div>
             </div>
             <div className='control-container'>
               <button
-                className={classNames(
-                  'button',
-                  !spacingOpen && 'button-outline',
-                )}
+                className={classNames('button', !spacingOpen && 'button-clear')}
                 onClick={this.toggle('spacingOpen')}
+                disabled={isEmpty}
               >
                 Edit Spacing
               </button>
               <button
-                className={classNames(
-                  'button',
-                  !marginOpen && 'button-outline',
-                )}
+                className={classNames('button', !marginOpen && 'button-clear')}
                 onClick={this.toggle('marginOpen')}
+                disabled={isEmpty}
               >
                 Edit Margin
               </button>
               <button
-                className='button button-outline'
+                className={classNames('button', !plusOpen && 'button-clear')}
                 onClick={this.toggle('plusOpen')}
+                disabled={isEmpty}
               >
                 Edit Pluses
               </button>
-              <button className='button button-outline' onClick={this.reset}>
-                Default Settings
+              <button
+                className='button button-clear'
+                onClick={this.reset}
+                disabled={isEmpty}
+              >
+                Use Default Settings
               </button>
             </div>
           </div>
         </div>
         {remoteUrl !== null && (
-          <div
-            style={{
-              alignItems: 'center',
-              display: 'flex',
-            }}
-          >
+          <div className='input-container'>
             <input
               type='text'
               id='remoteUrl'
