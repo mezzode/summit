@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 type Plus = {
+  endWithEquals: boolean;
   plusLength: number;
   plusWidth: number;
 } | null;
@@ -33,7 +34,11 @@ const plusDiffer = (a: Plus, b: Plus) => {
     return true;
   }
 
-  return a.plusLength !== b.plusLength || a.plusWidth !== b.plusWidth;
+  return (
+    a.plusLength !== b.plusLength ||
+    a.plusWidth !== b.plusWidth ||
+    a.endWithEquals !== b.endWithEquals
+  );
 };
 
 const calcPositions = (
@@ -78,6 +83,26 @@ const drawPlus = (
   ctx.lineTo(x + halfLength, y);
   ctx.moveTo(x, y - halfLength);
   ctx.lineTo(x, y + halfLength);
+  ctx.stroke();
+};
+
+const drawEquals = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sideLength: number,
+  lineWidth: number,
+): void => {
+  const quarterFactor = 4;
+  const halfFactor = 2;
+  const quarterLength = sideLength / quarterFactor;
+  const halfLength = sideLength / halfFactor;
+  ctx.beginPath();
+  ctx.lineWidth = lineWidth;
+  ctx.moveTo(x - halfLength, y - quarterLength);
+  ctx.lineTo(x + halfLength, y - quarterLength);
+  ctx.moveTo(x - halfLength, y + quarterLength);
+  ctx.lineTo(x + halfLength, y + quarterLength);
   ctx.stroke();
 };
 
@@ -151,9 +176,17 @@ export class Canvas extends Component<Props> {
 
       if (plus) {
         // Draw pluses between images
-        const { plusLength, plusWidth } = plus;
+        const { plusLength, plusWidth, endWithEquals } = plus;
         const halfFactor = 2;
-        if (index + 1 !== positions.length) {
+        if (endWithEquals && index + 2 === positions.length) {
+          drawEquals(
+            ctx,
+            x + img.width + spacing / halfFactor,
+            fullHeight / halfFactor,
+            plusLength,
+            plusWidth,
+          );
+        } else if (index + 1 !== positions.length) {
           drawPlus(
             ctx,
             x + img.width + spacing / halfFactor,

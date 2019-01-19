@@ -18,6 +18,7 @@ interface Props {}
 
 interface State extends Settings {
   canvasUrl: string | null;
+  endWithEquals: boolean;
   imgs: Array<{
     id: string;
     img: HTMLImageElement;
@@ -87,6 +88,7 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
 export class App extends Component<Props, State> {
   public state: State = {
     canvasUrl: null,
+    endWithEquals: false,
     imgs: [],
     marginInput: '',
     marginOpen: false,
@@ -106,6 +108,7 @@ export class App extends Component<Props, State> {
       remoteUrl,
       spacingInput,
       canvasUrl,
+      endWithEquals,
       imgs,
       spacingOpen,
       marginOpen,
@@ -131,6 +134,7 @@ export class App extends Component<Props, State> {
           plus={
             plusOn
               ? {
+                  endWithEquals,
                   plusLength: inputToNum(plusLength),
                   plusWidth: inputToNum(plusWidth),
                 }
@@ -284,6 +288,18 @@ export class App extends Component<Props, State> {
         </div>
         {plusOpen && (
           <div className='control-container'>
+            <button
+              className='button button-clear'
+              onClick={this.toggle('plusOn')}
+            >
+              {plusOn ? 'Hide' : 'Show'} Pluses
+            </button>
+            <button
+              className='button button-clear'
+              onClick={this.toggle('endWithEquals')}
+            >
+              Equals {endWithEquals ? 'Off' : 'On'}
+            </button>
             <NumInput
               label='Plus Length (px)'
               id='plusLength'
@@ -298,12 +314,6 @@ export class App extends Component<Props, State> {
               value={plusWidth}
               disabled={!plusOn}
             />
-            <button
-              className={classNames('button', { 'button-outline': !plusOn })}
-              onClick={this.toggle('plusOn')}
-            >
-              {plusOn ? 'Hide' : 'Show'} Pluses
-            </button>
           </div>
         )}
       </div>
