@@ -167,13 +167,12 @@ export class App extends Component<Props, State> {
         <div className='control-container'>
           <FileInput
             id='fileInput'
-            accept='image/*'
+            accept='.png, .jpg, .svg, .bmp'
             className='button button-outline'
-            multiple
             forwardedRef={this.fileInput}
             onChange={this.addLocal}
           >
-            Add local images
+            Add local
           </FileInput>
           <button
             className={`button${remoteUrl === null ? ' button-outline' : ''}`}
