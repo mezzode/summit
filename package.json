@@ -1,6 +1,7 @@
 {
-  "name": "article-header-gen",
-  "version": "0.1.0",
+  "name": "summit",
+  "license": " AGPL-3.0-or-later",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@types/classnames": "^2.2.7",
