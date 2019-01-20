@@ -1,6 +1,7 @@
 import classNames from 'classnames';
-import 'milligram';
 import 'normalize.css';
+// tslint:disable-next-line:ordered-imports so milligram overrides normalize
+import 'milligram';
 import React, { ChangeEvent, Component, MouseEventHandler } from 'react';
 import {
   DragDropContext,
@@ -59,7 +60,6 @@ const delIndex = <T extends {}>(arr: T[], index: number): T[] => {
 const inputToNum = (input: string) => parseInt(input, 10) || 0;
 
 const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
-  const marginRatio = 10;
   const spacingRatio = 5;
   const plusLengthRatio = 2;
   const widthRatio = 3;
@@ -68,14 +68,13 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
     widest.width > curr.width ? widest : curr,
   );
 
-  const margin = widestImg.width / marginRatio;
   const spacing = widestImg.width / spacingRatio;
   const plusLength = spacing / plusLengthRatio;
   const plusWidth = plusLength / widthRatio;
 
   const defaults = {
     endWithEquals: false,
-    marginInput: margin.toString(),
+    marginInput: '0',
     plusLength: plusLength.toString(),
     plusOn: true,
     plusWidth: plusWidth.toString(),
@@ -123,8 +122,8 @@ export class App extends Component<Props, State> {
     const imageList = (
       <DragDropContext onDragEnd={this.onDragEnd}>
         <Droppable droppableId='droppable'>
-          {(provided, snapshot) => (
-            <div ref={provided.innerRef}>
+          {provided => (
+            <div ref={provided.innerRef} className='list'>
               <small>Drag to reorder list</small>
               {imgs.map((item, index) => (
                 <Draggable
@@ -132,7 +131,7 @@ export class App extends Component<Props, State> {
                   draggableId={item.img.src}
                   index={index}
                 >
-                  {(providedDraggable, snapshotDraggable) => (
+                  {providedDraggable => (
                     <div
                       ref={providedDraggable.innerRef}
                       {...providedDraggable.draggableProps}
@@ -274,7 +273,8 @@ export class App extends Component<Props, State> {
 
     return (
       <div className='main container'>
-        <h1>Article Header Generator</h1>
+        <h1 className='title'>Summit</h1>
+        <h3>Article Header Maker</h3>
         <Canvas
           className='main-canvas'
           imgs={imgs.map(({ img }) => img)}
@@ -291,6 +291,17 @@ export class App extends Component<Props, State> {
               : null
           }
         />
+        <p className='text-placeholder'>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nec
+          suscipit ex. Donec sagittis maximus nisi, sollicitudin consequat nisl
+          pellentesque et. Nam ullamcorper diam id ex volutpat maximus. Praesent
+          gravida erat quam, nec gravida magna pretium rutrum. Nulla in suscipit
+          tellus. Nullam dapibus feugiat nulla in scelerisque. Pellentesque non
+          risus sit amet neque pellentesque suscipit. Vivamus facilisis quis
+          metus a vehicula. Morbi ultrices lorem ac nisl gravida, in venenatis
+          augue suscipit. Proin vehicula sagittis arcu vel vehicula.
+          Pellentesque et varius tellus, eget facilisis erat.
+        </p>
         {imgs.length > 0 && imageList}
         {remoteUrl !== null && (
           <div className='input-container'>
@@ -300,6 +311,7 @@ export class App extends Component<Props, State> {
               onChange={this.onInputChange}
               value={remoteUrl}
               placeholder='URL'
+              className='url-input'
             />
             <button className='button button-outline' onClick={this.addRemote}>
               Add

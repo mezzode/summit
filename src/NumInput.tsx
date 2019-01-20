@@ -1,4 +1,5 @@
 import React, { SFC } from 'react';
+import './NumInput.css';
 
 interface Props extends React.HTMLProps<HTMLInputElement> {
   // Require id so label can be linked
@@ -8,22 +9,8 @@ interface Props extends React.HTMLProps<HTMLInputElement> {
 
 // tslint:disable-next-line:variable-name
 export const NumInput: SFC<Props> = ({ label, ...inputProps }) => (
-  <div
-    style={{
-      alignItems: 'center',
-      display: 'flex',
-      justifyContent: 'center',
-      margin: '4px 12px',
-    }}
-  >
+  <div className='num-input-container'>
     <label htmlFor={inputProps.id}>{label}</label>
-    <input
-      type='number'
-      style={{
-        marginLeft: 12,
-        maxWidth: 100,
-      }}
-      {...inputProps}
-    />
+    <input type='number' className='num-input' {...inputProps} />
   </div>
 );

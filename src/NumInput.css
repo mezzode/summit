@@ -1,0 +1,12 @@
+.num-input-container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 1rem;
+}
+
+.num-input {
+    margin-bottom: 0;
+    margin-left: 1rem;
+    max-width: 10rem;
+}
