@@ -59,6 +59,8 @@ const delIndex = <T extends {}>(arr: T[], index: number): T[] => {
 
 const inputToNum = (input: string) => parseInt(input, 10) || 0;
 
+const validImage = (img: HTMLImageElement) => img.height > 0 && img.width > 0;
+
 const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
   const spacingRatio = 5;
   const plusLengthRatio = 2;
@@ -338,6 +340,8 @@ export class App extends Component<Props, State> {
       return;
     }
 
+    // Supports multiple files here but have disabled it on the input,
+    // due to inconsistent browser support on mobile.
     const toLoad = files.length;
     let loaded = 0;
     const newImgs = Array.from(files).map(f => {
@@ -347,6 +351,9 @@ export class App extends Component<Props, State> {
 
       img.addEventListener('load', () => {
         loaded += 1;
+        if (!validImage(img)) {
+          alert(`Could not add "${f.name}" as it has zero height or width.`);
+        }
         if (loaded === toLoad) {
           // All loaded
           this.setState(prevState => {
@@ -358,7 +365,10 @@ export class App extends Component<Props, State> {
             }
 
             return {
-              imgs: [...prevState.imgs, ...newImgs],
+              imgs: [
+                ...prevState.imgs,
+                ...newImgs.filter(i => validImage(i.img)),
+              ],
               ...defaults,
             };
           });
@@ -387,6 +397,11 @@ export class App extends Component<Props, State> {
     img.crossOrigin = 'anonymous';
 
     img.addEventListener('load', () => {
+      if (!validImage(img)) {
+        alert(`Could not add "${remoteUrl}" as it has zero height or width.`);
+
+        return;
+      }
       const [name] = remoteUrl.split('/').slice(-1);
       this.setState(prevState => {
         const { imgs } = prevState;
