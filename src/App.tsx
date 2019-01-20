@@ -125,6 +125,7 @@ export class App extends Component<Props, State> {
         <Droppable droppableId='droppable'>
           {(provided, snapshot) => (
             <div ref={provided.innerRef}>
+              <small>Drag to reorder list</small>
               {imgs.map((item, index) => (
                 <Draggable
                   key={item.id}
