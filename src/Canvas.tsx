@@ -3,6 +3,7 @@ import './Canvas.css';
 
 interface Props {
   className: string;
+  constrainHeight: boolean;
   imgs: HTMLImageElement[];
   margin: number;
   plus: Plus;
@@ -46,19 +47,32 @@ const calcPositions = (
   imgs: HTMLImageElement[],
   spacing: number,
   margin: number,
+  constrainHeight: boolean,
 ) => {
   const verticalWhitespace = 2; // Top and bottom
   const maxHeight = Math.max(...imgs.map(({ height }) => height));
-  const fullHeight = maxHeight + margin * verticalWhitespace;
+  const minHeight = Math.min(...imgs.map(({ height }) => height));
+  const fullHeight =
+    (constrainHeight ? minHeight : maxHeight) + margin * verticalWhitespace;
 
   let x = margin;
 
   // Calc positions (for drawing later since resizing the canvas clears it)
   const positions = [];
   for (const img of imgs) {
-    const y = (fullHeight - img.height) / verticalWhitespace;
-    positions.push({ img, x, y });
-    x += img.width + spacing;
+    let width;
+    let height;
+    if (constrainHeight) {
+      width = minHeight / (img.height / img.width);
+      height = minHeight;
+    } else {
+      width = img.width;
+      height = img.height;
+    }
+
+    const y = (fullHeight - height) / verticalWhitespace;
+    positions.push({ img, x, y, height, width });
+    x += width + spacing;
   }
   x += margin - spacing;
 
@@ -119,7 +133,8 @@ export class Canvas extends Component<Props> {
       imgsDiffer(prevProps.imgs, this.props.imgs) ||
       prevProps.spacing !== this.props.spacing ||
       prevProps.margin !== this.props.margin ||
-      plusDiffer(prevProps.plus, this.props.plus)
+      plusDiffer(prevProps.plus, this.props.plus) ||
+      prevProps.constrainHeight !== this.props.constrainHeight
     ) {
       this.updateCanvas();
     }
@@ -146,12 +161,13 @@ export class Canvas extends Component<Props> {
   private updateCanvas(): void {
     // Clear old url to prevent file being inconsistent with displayed canvas.
     this.setState({ canvasUrl: null });
-    const { margin, spacing, plus } = this.props;
+    const { margin, spacing, plus, constrainHeight } = this.props;
 
     const { positions, fullHeight, fullWidth } = calcPositions(
       this.props.imgs,
       spacing,
       margin,
+      constrainHeight,
     );
     if (positions.length === 0) {
       return;
@@ -171,8 +187,8 @@ export class Canvas extends Component<Props> {
       throw new Error('ctx missing');
     }
 
-    positions.forEach(({ img, x, y }, index) => {
-      ctx.drawImage(img, x, y);
+    positions.forEach(({ img, x, y, height, width }, index) => {
+      ctx.drawImage(img, x, y, width, height);
 
       if (plus) {
         // Draw pluses between images
@@ -181,7 +197,7 @@ export class Canvas extends Component<Props> {
         if (endWithEquals && index + 2 === positions.length) {
           drawEquals(
             ctx,
-            x + img.width + spacing / halfFactor,
+            x + width + spacing / halfFactor,
             fullHeight / halfFactor,
             plusLength,
             plusWidth,
@@ -189,7 +205,7 @@ export class Canvas extends Component<Props> {
         } else if (index + 1 !== positions.length) {
           drawPlus(
             ctx,
-            x + img.width + spacing / halfFactor,
+            x + width + spacing / halfFactor,
             fullHeight / halfFactor,
             plusLength,
             plusWidth,

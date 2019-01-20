@@ -30,6 +30,7 @@ interface State extends Settings {
 }
 
 interface Settings {
+  constrainHeight: boolean;
   endWithEquals: boolean;
   marginInput: string;
   plusLength: string;
@@ -75,6 +76,7 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
   const plusWidth = plusLength / widthRatio;
 
   const defaults = {
+    constrainHeight: true,
     endWithEquals: false,
     marginInput: '0',
     plusLength: plusLength.toString(),
@@ -89,6 +91,7 @@ const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
 export class App extends Component<Props, State> {
   public state: State = {
     canvasUrl: null,
+    constrainHeight: true,
     endWithEquals: false,
     imgs: [],
     marginInput: '',
@@ -116,6 +119,7 @@ export class App extends Component<Props, State> {
       plusOpen,
       plusLength,
       plusWidth,
+      constrainHeight,
     } = this.state;
     const margin = inputToNum(marginInput);
     const spacing = inputToNum(spacingInput);
@@ -242,6 +246,9 @@ export class App extends Component<Props, State> {
           onChange={this.onInputChange}
           value={marginInput}
         />
+        <button className='button button-clear' onClick={this.toggle('constrainHeight')}>
+          {constrainHeight ? 'Unconstrain' : 'Constrain'} Height
+        </button>
       </div>
     );
 
@@ -292,6 +299,7 @@ export class App extends Component<Props, State> {
                 }
               : null
           }
+          constrainHeight={constrainHeight}
         />
         <p className='text-placeholder'>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut nec
