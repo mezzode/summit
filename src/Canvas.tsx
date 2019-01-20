@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './Canvas.css';
 
 interface Props {
   className: string;
@@ -133,10 +134,12 @@ export class Canvas extends Component<Props> {
   }
 
   public render() {
-    return (
-      this.props.imgs.length > 0 && (
-        <canvas ref={this.canvas} className={this.props.className} />
-      )
+    return this.props.imgs.length > 0 ? (
+      <canvas ref={this.canvas} className={this.props.className} />
+    ) : (
+      <p className='image-placeholder'>
+        <em>Add an image below</em>
+      </p>
     );
   }
 
