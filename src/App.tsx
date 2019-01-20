@@ -291,10 +291,6 @@ export class App extends Component<Props, State> {
           }
         />
         {imgs.length > 0 && imageList}
-        <div>
-          {mainControls}
-          {secondaryControls}
-        </div>
         {remoteUrl !== null && (
           <div className='input-container'>
             <input
@@ -309,6 +305,10 @@ export class App extends Component<Props, State> {
             </button>
           </div>
         )}
+        <div>
+          {mainControls}
+          {secondaryControls}
+        </div>
         {spacingsOpen && spacingControls}
         {plusOpen && plusControls}
       </div>
