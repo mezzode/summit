@@ -19,11 +19,7 @@ interface Props {}
 
 interface State extends Settings {
   canvasUrl: string | null;
-  imgs: Array<{
-    id: string;
-    img: HTMLImageElement;
-    name: string;
-  }>;
+  imgs: ImageItem[];
   plusOpen: boolean;
   remoteUrl: string | null;
   spacingsOpen: boolean;
@@ -37,6 +33,12 @@ interface Settings {
   plusOn: boolean;
   plusWidth: string;
   spacingInput: string;
+}
+
+interface ImageItem {
+  id: string;
+  img: HTMLImageElement;
+  name: string;
 }
 
 const reorder = <T extends {}>(
@@ -62,16 +64,21 @@ const inputToNum = (input: string) => parseInt(input, 10) || 0;
 
 const validImage = (img: HTMLImageElement) => img.height > 0 && img.width > 0;
 
-const calcDefaults = (imgs: HTMLImageElement[]): Settings => {
+const calcDefaults = (imgItems: ImageItem[]): Settings => {
   const spacingRatio = 5;
   const plusLengthRatio = 2;
   const widthRatio = 3;
 
-  const widestImg = imgs.reduce((widest, curr) =>
-    widest.width > curr.width ? widest : curr,
+  // Basing horizontal spacing on widest width of scaled dims
+  // Note we use the scaled width as we default to constrainHeight which scales
+  // FIXME: refactor rescaling calculation to common function
+  const imgs = imgItems.map(i => i.img);
+  const minHeight = Math.min(...imgs.map(({ height }) => height));
+  const widestWidth = Math.max(
+    ...imgs.map(img => minHeight / (img.height / img.width)),
   );
 
-  const spacing = widestImg.width / spacingRatio;
+  const spacing = widestWidth / spacingRatio;
   const plusLength = spacing / plusLengthRatio;
   const plusWidth = plusLength / widthRatio;
 
@@ -132,11 +139,7 @@ export class App extends Component<Props, State> {
             <div ref={provided.innerRef} className='list'>
               <small>Drag to reorder list</small>
               {imgs.map((item, index) => (
-                <Draggable
-                  key={item.id}
-                  draggableId={item.img.src}
-                  index={index}
-                >
+                <Draggable key={item.id} draggableId={item.id} index={index}>
                   {providedDraggable => (
                     <div
                       ref={providedDraggable.innerRef}
@@ -150,7 +153,7 @@ export class App extends Component<Props, State> {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <span>{item.name}</span>
+                      <span className='list-item'>{item.name}</span>
                       <button
                         onClick={this.removeImg(index)}
                         className='button button-clear'
@@ -246,7 +249,10 @@ export class App extends Component<Props, State> {
           onChange={this.onInputChange}
           value={marginInput}
         />
-        <button className='button button-clear' onClick={this.toggle('constrainHeight')}>
+        <button
+          className='button button-clear'
+          onClick={this.toggle('constrainHeight')}
+        >
           {constrainHeight ? 'Unconstrain' : 'Constrain'} Height
         </button>
       </div>
@@ -348,8 +354,8 @@ export class App extends Component<Props, State> {
       return;
     }
 
-    // Supports multiple files here but have disabled it on the input,
-    // due to inconsistent browser support on mobile.
+    // Supports multiple files here but have disabled it on the input
+    // (reason being inconsistent browser support on mobile)
     const toLoad = files.length;
     let loaded = 0;
     const newImgs = Array.from(files).map(f => {
@@ -365,19 +371,16 @@ export class App extends Component<Props, State> {
         if (loaded === toLoad) {
           // All loaded
           this.setState(prevState => {
-            const { imgs } = prevState;
-            let defaults = {};
-            if (imgs.length === 0) {
-              // Set default values
-              defaults = calcDefaults(newImgs.map(i => i.img));
-            }
+            const imgs = [
+              ...prevState.imgs,
+              ...newImgs.filter(i => validImage(i.img)),
+            ];
 
             return {
-              imgs: [
-                ...prevState.imgs,
-                ...newImgs.filter(i => validImage(i.img)),
-              ],
-              ...defaults,
+              imgs,
+              // Reset settings to avoid carrying over bad sizings
+              // (e.g. big image then small image would've meant big plus remained)
+              ...calcDefaults(imgs),
             };
           });
         }
@@ -412,20 +415,21 @@ export class App extends Component<Props, State> {
       }
       const [name] = remoteUrl.split('/').slice(-1);
       this.setState(prevState => {
-        const { imgs } = prevState;
-        const defaults = imgs.length === 0 ? calcDefaults([img]) : {};
+        const imgs = [
+          ...prevState.imgs,
+          {
+            id: uuidv4(),
+            img,
+            name,
+          },
+        ];
 
         return {
-          imgs: [
-            ...imgs,
-            {
-              id: uuidv4(),
-              img,
-              name,
-            },
-          ],
+          imgs,
           remoteUrl: '',
-          ...defaults,
+          // Reset settings to avoid carrying over bad sizings
+          // (e.g. big image then small image would've meant big plus remained)
+          ...calcDefaults(imgs),
         };
       });
     });
@@ -467,7 +471,7 @@ export class App extends Component<Props, State> {
     }))
 
   private reset: MouseEventHandler<HTMLButtonElement> = () => {
-    this.setState(prevState => calcDefaults(prevState.imgs.map(i => i.img)));
+    this.setState(prevState => calcDefaults(prevState.imgs));
   }
 
   private toggle = <T extends keyof State>(
